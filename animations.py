@@ -1,8 +1,6 @@
-from math import floor
-from sys import float_repr_style
+import random
 
 import pygame
-import random
 
 rand = random.Random()
 
@@ -58,13 +56,14 @@ class Lift:
         self.width = lift_width
         self.height = floor_spacing
         self.x = lift_x
-        self.y = floors * floor_spacing - self.height  # Start at the bottom floor
+        self.y = (floors - 1) * floor_spacing  # Start at floor 0
         self.target_y = self.y  # Target position for smooth movement
         self.speed = 2  # Speed of lift movement
         self.is_stopped = False
         self.current_floor = 0
-        self.people = []
+        self.people : [Person] = []
         self.hasMovedPeople = False
+        self.target_floor = self.current_floor
 
     def draw(self):
         # Draw the lift as a rectangle
@@ -72,8 +71,9 @@ class Lift:
 
     def move_to_floor(self, floor):
         # Set the target position based on the floor number
-        self.target_y = floor * floor_spacing + (floor_spacing - self.height) / 2
-        self.current_floor = floor
+        self.target_y = (floors - 1 - floor) * floor_spacing + (floor_spacing - self.height) / 2
+
+        self.target_floor = floor
 
     def update(self):
         # Smooth movement towards the target_y
@@ -82,10 +82,15 @@ class Lift:
         elif self.y > self.target_y:
             self.y = max(self.y - self.speed, self.target_y)
 
+        #Update people in lift as well
+        new_y = self.y
+        if self.y < self.target_y:
+            new_y = min(self.y + self.speed, self.target_y)
+        elif self.y > self.target_y:
+            new_y = max(self.y - self.speed, self.target_y)
 
-
-
-
+        for person in self.people:
+            person.target_position[1] = new_y
 
 
 
@@ -102,12 +107,14 @@ def move_lift_people(lift):
         #More people than space
         for n in range(amount_to_take):
             person = floor_people[lift.current_floor][0]
+            lift.people.append(person)
             person.move_into_lift(len(lift.people))
-            floor_people[lift.current_floor] = floor_people[lift.current_floor][1:] #Removes the person from list
+            # floor_people[lift.current_floor] = floor_people[lift.current_floor][1:] #THIS BREAKS THE LIFT
     else:
         for person in floor_people[lift.current_floor]:
+            lift.people.append(person)
             person.move_into_lift(len(lift.people))
-        floor_people[lift.current_floor] = []
+        # floor_people[lift.current_floor] = [] #THIS BREAKS THE LIFT
 
 
 def start_animation():
@@ -124,6 +131,7 @@ def start_animation():
             add_random_person()
 
         if lift.y == lift.target_y and not lift.hasMovedPeople:
+            lift.current_floor = lift.target_floor
             move_lift_people(lift)
             lift.hasMovedPeople = True
 
@@ -131,22 +139,18 @@ def start_animation():
         # Check if 3 seconds have passed since the last floor change
         if current_time - last_floor_change_time >= 3000:
             # Choose a random floor for the lift to move to
-            current_floor = rand.randint(0, floors - 1)
+            target_floor = rand.randint(0, floors - 1)
             lift.hasMovedPeople = False
-            lift.move_to_floor(current_floor)
+            lift.move_to_floor(target_floor)
 
             # Update the last floor change time
             last_floor_change_time = current_time
 
         lift.update()
 
-        print(len(floor_people[lift.current_floor]))
-
         for person in floor_people:
             for p in person:
                 p.move()
-                sprite, position = p.get_sprite()
-                screen.blit(sprite, (position[0] - p.radius, position[1] - p.radius))
 
         screen.fill((255, 255, 255))
         draw_tower()
@@ -190,6 +194,7 @@ class Person:
         return surface, self.position
 
     def move(self):
+
         # Smooth movement towards the target position
         if self.position[1] < self.target_position[1]:
             self.position[1] = min(self.position[1] + self.speed, self.target_position[1])
@@ -206,10 +211,12 @@ class Person:
     def move_into_lift(self, people_in_lift):
         #Figure out new location
         global lift_x
-        x = lift_x
+        offset = 5
+        x = lift_x + (lift_width / 2) - (self.radius * 2) - offset
+        print(f"{lift_x}, {lift_width}, {lift_x + (lift_width / 2)}")
         y = self.position[1]
         if people_in_lift % 2 == 1:
-            x += self.radius * 2
+            x += self.radius * 2 + (offset * 2)
 
         self.target_position = [x, y]
 
@@ -227,13 +234,6 @@ class Person:
             y -= (self.radius * 2) + person_spacing
 
         return [x, y]
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
