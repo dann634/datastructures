@@ -5,7 +5,7 @@ import pygame
 rand = random.Random()
 
 floor_people = [] #2D list
-floors = 5
+floors = 7
 image_sprites = []
 
 pygame.init()
@@ -19,13 +19,17 @@ clock = pygame.time.Clock()
 tower_width = 600
 floor_spacing = 100
 tower_start_x = (screen_width / 2) - (tower_width / 2)
-max_number_waiting = 10
+max_number_waiting = 6
 lift_width = 100
 lift_x = (screen_width / 2) - (lift_width / 2)
+lift_y = (floors - 1) * floor_spacing
 floors_available = []
 person_spacing = 10
-spawn_rate = 0.01
+spawn_rate = 0.4
 lift_capacity = 4
+people_leaving = []
+game_speed = 8
+lift_wait_delay = 500
 
 def draw_tower():
     for i in range(floors + 1):  # +1 to include the top floor line
@@ -51,19 +55,22 @@ def add_random_person():
     image_sprites.append(person.get_sprite())
 
 
+
+
 class Lift:
     def __init__(self):
         self.width = lift_width
         self.height = floor_spacing
         self.x = lift_x
-        self.y = (floors - 1) * floor_spacing  # Start at floor 0
+        self.y = lift_y  # Start at floor 0
         self.target_y = self.y  # Target position for smooth movement
-        self.speed = 2  # Speed of lift movement
+        self.speed = game_speed  # Speed of lift movement
         self.is_stopped = False
         self.current_floor = 0
         self.people : [Person] = []
         self.hasMovedPeople = False
         self.target_floor = self.current_floor
+        self.open_spaces = []
 
     def draw(self):
         # Draw the lift as a rectangle
@@ -72,7 +79,6 @@ class Lift:
     def move_to_floor(self, floor):
         # Set the target position based on the floor number
         self.target_y = (floors - 1 - floor) * floor_spacing + (floor_spacing - self.height) / 2
-
         self.target_floor = floor
 
     def update(self):
@@ -90,16 +96,36 @@ class Lift:
             new_y = max(self.y - self.speed, self.target_y)
 
         for person in self.people:
-            person.target_position[1] = new_y
+            person.move_with_lift(new_y)
+
+class CallManager:
+    def __init__(self):
+        pass
+
 
 
 
 def move_lift_people(lift):
-    #People move out of lift if its their stop (add later)
+    #People move out of lift if its their stop
+
+    people_to_remove = []
+    for person in lift.people:
+        if person.target_floor == lift.current_floor:
+            lift.open_spaces.append([person.position[0], person.lift_y_offset])
+            person.target_position[0] = tower_width + tower_start_x - (person.radius * 2)
+            people_to_remove.append(person)
+            people_leaving.append(person)
+
+    for person in people_to_remove:
+        lift.people.remove(person)
+
 
     #People move into lift if waiting
     if len(lift.people) >= lift_capacity:
         return #Lift is full
+
+    if len(floor_people[lift.current_floor]) == 0:
+        return #Floor is empty
 
     #Take as many people as possible
     amount_to_take = lift_capacity - len(lift.people)
@@ -107,20 +133,40 @@ def move_lift_people(lift):
         #More people than space
         for n in range(amount_to_take):
             person = floor_people[lift.current_floor][0]
+            person.move_into_lift(lift)
             lift.people.append(person)
-            person.move_into_lift(len(lift.people))
-            # floor_people[lift.current_floor] = floor_people[lift.current_floor][1:] #THIS BREAKS THE LIFT
+            floor_people[lift.current_floor] = floor_people[lift.current_floor][1:]
     else:
         for person in floor_people[lift.current_floor]:
+            person.move_into_lift(lift)
             lift.people.append(person)
-            person.move_into_lift(len(lift.people))
-        # floor_people[lift.current_floor] = [] #THIS BREAKS THE LIFT
+        floor_people[lift.current_floor] = []
+
+    floors_available.append(lift.current_floor)
+
+    #Move the people waiting closer to the lift
+    move_waiting_people_to_lift(lift)
+
+def move_waiting_people_to_lift(lift : Lift):
+    for person in floor_people[lift.current_floor]:
+
+        #Count how many people in front of you on the same level
+        counter = 0
+        for person_in_line in floor_people[lift.current_floor]:
+            if person.position[1] == person_in_line.position[1]:
+                if person == person_in_line:
+                    break
+                counter += 1
+
+        person.move_towards_lift(counter)
 
 
 def start_animation():
 
     lift = Lift()
     last_floor_change_time = 0
+
+    call_manager = CallManager()
 
     run = True
     while run:
@@ -137,9 +183,11 @@ def start_animation():
 
         current_time = pygame.time.get_ticks()
         # Check if 3 seconds have passed since the last floor change
-        if current_time - last_floor_change_time >= 3000:
+        if current_time - last_floor_change_time >= lift_wait_delay:
             # Choose a random floor for the lift to move to
             target_floor = rand.randint(0, floors - 1)
+            while target_floor == lift.current_floor:
+                target_floor = rand.randint(0, floors - 1)
             lift.hasMovedPeople = False
             lift.move_to_floor(target_floor)
 
@@ -147,10 +195,8 @@ def start_animation():
             last_floor_change_time = current_time
 
         lift.update()
+        move_sprites(lift)
 
-        for person in floor_people:
-            for p in person:
-                p.move()
 
         screen.fill((255, 255, 255))
         draw_tower()
@@ -164,16 +210,54 @@ def start_animation():
     pygame.quit()
 
 
+def move_sprites(lift : Lift):
+    for person in floor_people:
+        for p in person:
+            p.move()
+
+    for person in lift.people:
+        person.move()
+
+    old_sprites = []
+    old_people = []
+    for person in people_leaving:
+        if person.position[0] >= tower_width + tower_start_x - (person.radius * 2):
+            old_people.append(person)
+            old_sprites.append(person.sprite)
+        person.move()
+
+    remove_old_sprites(old_sprites, old_people)
+
+
+def remove_old_sprites(old_sprites, old_people):
+    for sprite in old_sprites:
+        for surface in image_sprites:
+            if sprite == surface:
+                image_sprites.remove(surface)
+
+    for person in old_people:
+        people_leaving.remove(person)
+
+
+
+
+
+
 
 class Person:
     def __init__(self):
         self.radius = 15
-        self.speed = 2
+        self.speed = game_speed
+        self.lift_y_offset = 0
 
         self.starting_floor = rand.choice(floors_available)
         self.target_floor = rand.randint(0, floors - 1)
 
-        if len(floor_people[self.starting_floor]) == max_number_waiting - 1:
+        self.sprite = None
+
+        self.opacity = 255
+
+        if len(floor_people[self.starting_floor]) >= max_number_waiting - 1:
             floors_available.remove(self.starting_floor)
 
 
@@ -184,12 +268,13 @@ class Person:
         self.position = self._get_starting_position()
         self.target_position = self.position[:]
 
-
     def get_sprite(self):
         blue = (84, 150, 255)
 
-        surface = pygame.Surface((self.radius*2, self.radius * 2), pygame.SRCALPHA)
+        surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         pygame.draw.circle(surface, blue, (self.radius, self.radius), self.radius)
+
+        self.sprite = surface
 
         return surface, self.position
 
@@ -208,17 +293,39 @@ class Person:
 
 
 
-    def move_into_lift(self, people_in_lift):
+    def move_into_lift(self, lift):
         #Figure out new location
+
+        if len(lift.open_spaces) > 0:
+            self.target_position[0] = lift.open_spaces[0][0]
+            self.lift_y_offset = lift.open_spaces[0][1]
+            lift.open_spaces = lift.open_spaces[1:]
+            return
+
         global lift_x
         offset = 5
         x = lift_x + (lift_width / 2) - (self.radius * 2) - offset
-        print(f"{lift_x}, {lift_width}, {lift_x + (lift_width / 2)}")
-        y = self.position[1]
-        if people_in_lift % 2 == 1:
+        if len(lift.people) % 2 == 1:
             x += self.radius * 2 + (offset * 2)
 
-        self.target_position = [x, y]
+        if len(lift.people) < 2:
+            self.lift_y_offset = (floor_spacing / 2) - (self.radius * 2) - offset
+        else:
+            self.lift_y_offset = (floor_spacing / 2) + offset
+
+
+        self.target_position[0] = x
+
+
+    def move_with_lift(self, y):
+        self.target_position[1] = y + self.lift_y_offset
+
+
+    def move_towards_lift(self, position_in_line):
+        x = tower_start_x + (tower_width / 2) - lift_width - ((position_in_line) * 2 * self.radius) - (person_spacing * (position_in_line))
+
+        self.target_position[0] = x
+
 
 
     def _get_starting_position(self):
