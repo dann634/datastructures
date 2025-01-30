@@ -1,9 +1,9 @@
-import scan
-
+import scan_old
+import look
 
 def run_test(test_name, lift_data):
     print(f"\n=== {test_name} ===")
-    result = scan.scan(lift_data)
+    result = scan_old.scan(lift_data)
 
     floor_requests, internal_requests, direction, floor_to_serve_next, floors_travelled_past = result
 
@@ -40,11 +40,11 @@ lift_data3 = (
 )
 run_test("Test 3: Lift starting at the ground floor. External request (DOWN) at 1", lift_data3)
 
-# TEST 4: Lift starting at 4. Internal request for 1.
+# TEST 4: Lift starting at 2. Internal request for 1.
 lift_data4 = (
     [[False, False]] * 5,  # No external requests
     [False, True, False, False, False], # Internal request for 1
-    'down',
-    4 # Start at 4
+    'up',
+    2 # Start at 4
 )
-run_test("Test 4: Lift starting at 4. Internal request for 1.", lift_data4)
+run_test("Test 4: Lift starting at 2. Internal request for 1.", lift_data4)
