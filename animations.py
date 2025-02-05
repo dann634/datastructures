@@ -346,3 +346,48 @@ class Person:
 if __name__ == '__main__':
     initialise_floors()
     start_animation()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Call:
+    def __init__(self, starting_floor, direction):
+        self.starting_floor = starting_floor
+        self.direction = direction
+
+
+class PQueue:
+    def __init__(self):
+        self.array : [Call] = []
