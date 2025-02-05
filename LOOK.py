@@ -1,9 +1,8 @@
 from LiftQueue import LiftQueue
 
 
-def scan(lift_data):
-    reached_limit = False
-    min_floor, max_floor, lift_queue, current_direction, current_floor = lift_data
+def look(lift_data):
+    lift_queue, current_direction, current_floor = lift_data
     next_floor = LiftQueue.dequeue(lift_queue).requested_floor
 
     at_target_floor = False
@@ -15,11 +14,5 @@ def scan(lift_data):
         elif next_floor < current_floor and current_direction == "down":
             at_target_floor = True
         else:
-            if current_direction == "up":
-                current_floor = max_floor
-                current_direction = "down"
-            elif current_direction == "down":
-                current_floor = min_floor
-                current_direction = "up"
-            reached_limit = True
-    return current_direction, next_floor, reached_limit
+            current_direction = "down" if current_direction == "up" else "up"
+    return current_direction, next_floor
