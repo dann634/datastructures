@@ -3,7 +3,7 @@ from LiftQueue import LiftQueue
 
 def look(lift_data):
     lift_queue, current_direction, current_floor = lift_data
-    next_floor = LiftQueue.dequeue(lift_queue).requested_floor
+    next_floor = lift_queue.dequeue().requested_floor
 
     at_target_floor = False
     while not at_target_floor:

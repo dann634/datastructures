@@ -2,9 +2,10 @@ from LiftQueue import LiftQueue
 
 
 def scan(lift_data):
+
     reached_limit = False
     min_floor, max_floor, lift_queue, current_direction, current_floor = lift_data
-    next_floor = LiftQueue.dequeue(lift_queue).requested_floor
+    next_floor = lift_queue.dequeue().requested_floor
 
     at_target_floor = False
     while not at_target_floor:
