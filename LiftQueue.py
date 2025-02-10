@@ -10,8 +10,8 @@ class LiftQueue:
         self.calls.append(call)
 
     def dequeue(self):
-        if self.calls:
-            return self.calls.pop(0)
+        if len(self.calls) > 0:
+            return self.calls.pop()
         return None
 
     def peek(self):
