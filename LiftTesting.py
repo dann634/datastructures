@@ -9,7 +9,7 @@ from LOOK import look
 from SCAN import scan
 
 
-def file_testing(filename, algorithm, start_floor, start_direction, min_floor = 0):
+def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0):
     print("*" * 40)
     print(f"TEST USING {algorithm} WITH FILE {filename}")
     print("*" * 40)
@@ -75,10 +75,10 @@ def file_testing(filename, algorithm, start_floor, start_direction, min_floor = 
                 floors_traversed = abs(start_floor - next_floor)
 
         total_floors_traversed = total_floors_traversed + floors_traversed
-        print(f"The lift has traveled from floor {start_floor} to floor {next_floor}. It has traversed {floors_traversed} floor(s). ")
+        print(
+            f"The lift has traveled from floor {start_floor} to floor {next_floor}. It has traversed {floors_traversed} floor(s). ")
         start_direction = new_direction
         start_floor = next_floor
-
 
     print()
     print(f"The lift traveled a total of {total_floors_traversed} floor(s) when serving {people_served} people.")
@@ -184,7 +184,8 @@ def random_testing(algorithm="LOOK"):
 
     print(f"The lift travelled {total_floors_travelled} floors.")
 
-def floors_vs_people_graph(number_of_tests, testing_type = "random"):
+
+def floors_vs_people_graph(number_of_tests, testing_type="random"):
     floors_traversed_scan = []
     people_served_scan = []
     floors_traversed_look = []
