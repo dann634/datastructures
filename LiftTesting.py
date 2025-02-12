@@ -3,7 +3,7 @@ from turtledemo.penrose import start
 
 from matplotlib import pyplot as plt
 
-# from LiftQueue import LiftQueue
+from LiftQueue import LiftQueueR
 from LiftQueueCopy import LiftQueue
 from Call import Call
 from LOOK import look
@@ -39,7 +39,7 @@ def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0)
                 floor_requests[floor] = requests
 
     people_served = 0
-    lift_queue = LiftQueue()
+    lift_queue = LiftQueueR()
     while floor_requests:
         people_served = people_served + 1
         external_floor_request = random.choice(list(floor_requests.keys()))
@@ -83,6 +83,7 @@ def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0)
 
     print()
     print(f"The lift traveled a total of {total_floors_traversed} floor(s) when serving {people_served} people.")
+    return floor_requests, people_served
 
 
 """
@@ -254,7 +255,8 @@ def floors_vs_people_graph(number_of_tests):
     plt.grid(True)
     plt.show()
 
-
+for x in range(15):
+    file_testing(f"input{x+1}.txt", "LOOK", 0, "up")
 
 if __name__ == '__main__':
     floors_vs_people_graph(2000)

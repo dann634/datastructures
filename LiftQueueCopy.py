@@ -32,5 +32,4 @@ class LiftQueue:
         list = []
         for call in self.calls:
             list.append(call.requested_floor)
-
         print(list)

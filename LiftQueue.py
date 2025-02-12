@@ -1,7 +1,7 @@
 import Call
 
 
-class LiftQueue:
+class LiftQueueR:
     def __init__(self):
         self.calls: [Call] = []
         self.frontPointer = 0
