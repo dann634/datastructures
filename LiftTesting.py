@@ -1,5 +1,5 @@
 import random
-from LiftQueue import LiftQueue
+from LiftQueueCopy import LiftQueue
 from Call import Call
 from LOOK import look
 from SCAN import scan
@@ -86,12 +86,12 @@ def random_testing(algorithm="LOOK"):
 
     #Lift Variables
     floors = 5
-    number_of_people = 50
+    number_of_people = 5000
     people_moved = 0
     current_direction = "up"
     current_floor = 0
 
-    lift_capacity = 10
+    lift_capacity = 1
 
     #People lists
     people = []
@@ -113,24 +113,35 @@ def random_testing(algorithm="LOOK"):
         current_floor = next_floor
 
         #Read any calls
-        for request in people:
-            if not lift_queue.contains(request):
-                lift_queue.enqueue(Call(request, False))
+        if lift_queue.isEmpty():
+            for request in people:
+                if not lift_queue.contains(request) and not current_floor == request:
+                    lift_queue.enqueue(Call(request, False))
 
-        for request in lift_people:
-            if not lift_queue.contains(request):
-                lift_queue.enqueue(Call(request, True))
+            for request in lift_people:
+                if not lift_queue.contains(request):
+                    lift_queue.enqueue(Call(request, True))
+
 
         #Check if anyone needs to get out
+        requests_to_remove = []
         for request in lift_people:
             if request == current_floor:
                 #this is your floor
                 people_moved += 1
                 print(f"Person successfully moved to {request}. {people_moved} people moved.")
-                lift_people.remove(request)
+                requests_to_remove.append(request)
+
+        for request in requests_to_remove:
+            lift_people.remove(request)
+
 
         #Get all the people waiting
         people_on_floor = people.count(current_floor)
+
+        if people_on_floor == 0:
+            #No one waiting on this floor
+            continue
 
         if len(lift_people) + people_on_floor > lift_capacity:
             #Too many people
@@ -138,11 +149,18 @@ def random_testing(algorithm="LOOK"):
             #Remove people from floor_list
             counter = 0
             for request in people:
-                if counter == max_can_move:
+                if counter == max_can_move: #Maybe start counter at 1
                     break
                 if request == current_floor:
                     people.remove(request)
                     counter += 1
+
+                    target_floor = random.randint(0, floors - 1)
+                    while target_floor == current_floor:
+                        target_floor = random.randint(0, floors - 1)
+
+                    lift_queue.enqueue(Call(target_floor, True))
+                    lift_people.append(target_floor)
 
         else:
             #Can take everyone
@@ -150,9 +168,9 @@ def random_testing(algorithm="LOOK"):
             people = [request for request in people if request != current_floor]
             for _ in range(people_on_floor):
                 # Make a random internal request
-                target_floor = random.randint(0, floors)
+                target_floor = random.randint(0, floors - 1)
                 while target_floor == current_floor:
-                    target_floor = random.randint(0, floors)
+                    target_floor = random.randint(0, floors - 1)
 
                 lift_queue.enqueue(Call(target_floor, True))
                 lift_people.append(target_floor)

@@ -23,3 +23,6 @@ class LiftQueue:
             if call.requested_floor == floor:
                 return True
         return False
+
+    def isEmpty(self):
+        return len(self.calls) == 0
