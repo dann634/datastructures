@@ -7,15 +7,15 @@ def look(lift_data):
         return current_direction, current_floor
 
     # If the lift is moving up and the requested floor is above the current floor
-    elif (next_floor > current_floor and current_direction == "up"):
+    elif next_floor > current_floor and current_direction == "up":
         return current_direction, next_floor
 
     # If the lift is moving down and the requested floor is below the current floor
-    elif (next_floor < current_floor and current_direction == "down"):
+    elif next_floor < current_floor and current_direction == "down":
         return current_direction, next_floor
 
     # If the lift is moving in the wrong direction the direction is flipped
-    elif (current_direction == "up"):
+    elif current_direction == "up":
         return "down", next_floor
-    elif (current_direction == "down"):
+    elif current_direction == "down":
         return "up", next_floor

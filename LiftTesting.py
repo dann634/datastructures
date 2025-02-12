@@ -112,7 +112,7 @@ def random_testing(algorithm="LOOK"):
         total_floors_travelled += abs(next_floor - current_floor)
         current_floor = next_floor
 
-        #Readd any calls
+        #Read any calls
         for request in people:
             if not lift_queue.contains(request):
                 lift_queue.enqueue(Call(request, False))
