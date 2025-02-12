@@ -23,3 +23,6 @@ class LiftQueue:
             if call.requested_floor == floor:
                 return True
         return False
+
+    def size(self):
+        return self.rearPointer - self.frontPointer + 1
