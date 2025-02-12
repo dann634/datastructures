@@ -26,3 +26,6 @@ class LiftQueue:
 
     def isEmpty(self):
         return len(self.calls) == 0
+
+    def size(self):
+        return self.rearPointer - self.frontPointer + 1
