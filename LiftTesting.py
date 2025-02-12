@@ -76,8 +76,7 @@ def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0)
                 floors_traversed = abs(start_floor - next_floor)
 
         total_floors_traversed = total_floors_traversed + floors_traversed
-        print(
-            f"The lift has traveled from floor {start_floor} to floor {next_floor}. It has traversed {floors_traversed} floor(s). ")
+        #print(f"The lift has traveled from floor {start_floor} to floor {next_floor}. It has traversed {floors_traversed} floor(s).")
         start_direction = new_direction
         start_floor = next_floor
 
@@ -148,13 +147,11 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
 
                 total_floors_travelled += floors_traversed
 
-
         if not reached_limit:
             total_floors_travelled += abs(next_floor - current_floor)
         current_floor = next_floor
 
-
-        #Read any calls
+        # Read any calls
         if lift_queue.isEmpty():
             for request in people:
                 if not lift_queue.contains(request) and not current_floor == request:
@@ -166,7 +163,7 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
 
         # Check if anyone needs to get out
 
-        #Check if anyone needs to get out
+        # Check if anyone needs to get out
         requests_to_remove = []
         for request in lift_people:
             if request == current_floor:
@@ -180,11 +177,11 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
 
         # Get all the people waiting
 
-        #Get all the people waiting
+        # Get all the people waiting
         people_on_floor = people.count(current_floor)
 
         if people_on_floor == 0:
-            #No one waiting on this floor
+            # No one waiting on this floor
             continue
 
         if len(lift_people) + people_on_floor > lift_capacity:
@@ -223,9 +220,6 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
     return total_floors_travelled, people_moved
 
 
-
-
-
 def floors_vs_people_graph(number_of_tests):
     floors_traversed_scan = []
     people_served_scan = []
@@ -255,8 +249,9 @@ def floors_vs_people_graph(number_of_tests):
     plt.grid(True)
     plt.show()
 
+
 for x in range(15):
-    file_testing(f"input{x+1}.txt", "LOOK", 0, "up")
+    file_testing(f"input{x + 1}.txt", "LOOK", 0, "up")
 
 if __name__ == '__main__':
     floors_vs_people_graph(2000)
