@@ -16,7 +16,7 @@ def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0)
     print("*" * 40)
     print()
 
-    with open(filename, "r") as file:
+    with open(f"input_files/{filename}", "r") as file:
         file_lines = file.readlines()
         file.close()
 
