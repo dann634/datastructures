@@ -5,11 +5,17 @@ class LiftQueue:
         self.calls: [Call] = []
 
     def enqueue(self, call: Call):
-        if self.contains(call.requested_floor):
-            return
         self.calls.append(call)
 
-    def dequeue(self):
+    def dequeue(self, ignore_weight, is_lift_full):
+
+        if not ignore_weight and is_lift_full:
+            #Serve only internal calls
+            for call in self.calls:
+                if call.isInternal:
+                    self.calls.remove(call)
+                    return call
+
         if len(self.calls) > 0:
             return self.calls.pop()
         return None

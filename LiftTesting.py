@@ -3,6 +3,7 @@ from turtledemo.penrose import start
 
 from matplotlib import pyplot as plt
 
+from LiftManager import LiftManager
 from LiftQueue import LiftQueueR
 from LiftQueueCopy import LiftQueue
 from Call import Call
@@ -97,18 +98,17 @@ FUNCTIONS:
 """
 
 
-def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
+def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5, ignore_weight=False):
     # print("*" * 40)
     # print(f"TEST USING {algorithm}")
     # print("*" * 40)
     # print()
 
     # Declares which lift algorithm to use
-    lift_algorithm = look
+    lift_algorithm = scan
     if algorithm == "SCAN":
         lift_algorithm = scan
 
-    lift_queue = LiftQueue()
 
     # Lift Variables
     floors = 5
@@ -124,67 +124,67 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
     # Tracking metrics
     total_floors_travelled = 0
 
+    lift_manager = LiftManager(capacity=lift_capacity, direction=current_direction, current_floor=current_floor, floors=floors, ignore_weight=ignore_weight)
+
+
     for _ in range(number_of_people):
         starting_floor = random.randint(0, floors)
-        lift_queue.enqueue(Call(starting_floor, False))
+        lift_manager.lift_queue.enqueue(Call(starting_floor, False))
         people.append(starting_floor)
 
     while len(people) > 0 or len(lift_people) > 0:
         # Run the loop
         if algorithm == "LOOK":
-            lift_data = lift_queue, current_direction, current_floor
+            lift_data = lift_manager.lift_queue, lift_manager.current_direction, current_floor
             current_direction, next_floor = lift_algorithm(lift_data)
         elif algorithm == "SCAN":
-            lift_data = 0, floors, lift_queue, current_direction, current_floor
-            current_direction, next_floor, reached_limit = lift_algorithm(lift_data)
+            current_direction, next_floor, reached_limit = lift_manager.scan()
 
             if reached_limit:
                 floors_traversed = 0
                 if current_direction == "up":
-                    floors_traversed = (floors - current_floor) + (floors - next_floor)
+                    floors_traversed = (floors - lift_manager.current_floor) + (floors - next_floor)
                 elif current_direction == "down":
-                    floors_traversed = current_floor + next_floor
+                    floors_traversed = lift_manager.current_floor + next_floor
 
                 total_floors_travelled += floors_traversed
 
         if not reached_limit:
-            total_floors_travelled += abs(next_floor - current_floor)
-        current_floor = next_floor
+            total_floors_travelled += abs(next_floor - lift_manager.current_floor)
+        lift_manager.current_floor = next_floor
 
         # Read any calls
-        if lift_queue.isEmpty():
-            for request in people:
-                if not lift_queue.contains(request) and not current_floor == request:
-                    lift_queue.enqueue(Call(request, False))
+        # if lift_manager.lift_queue.isEmpty():
+        #     for request in people:
+        #         if not lift_manager.lift_queue.contains(request) and not lift_manager.current_floor == request:
+        #             lift_manager.lift_queue.enqueue(Call(request, False))
+        #
+        #     for request in lift_people:
+        #         if not lift_manager.lift_queue.contains(request):
+        #             lift_manager.lift_queue.enqueue(Call(request, True))
 
-            for request in lift_people:
-                if not lift_queue.contains(request):
-                    lift_queue.enqueue(Call(request, True))
-
-        # Check if anyone needs to get out
 
         # Check if anyone needs to get out
         requests_to_remove = []
         for request in lift_people:
-            if request == current_floor:
+            if request == lift_manager.current_floor:
                 # this is your floor
                 people_moved += 1
-                # print(f"Person successfully moved to {request}. {people_moved} people moved.")
+                lift_manager.remove_person()
                 requests_to_remove.append(request)
 
         for request in requests_to_remove:
             lift_people.remove(request)
 
-        # Get all the people waiting
 
         # Get all the people waiting
-        people_on_floor = people.count(current_floor)
+        people_on_floor = people.count(lift_manager.current_floor)
 
         if people_on_floor == 0:
             # No one waiting on this floor
             continue
 
-        if len(lift_people) + people_on_floor > lift_capacity:
+        if people_on_floor > lift_manager.get_free_space():
             # Too many people
             max_can_move = lift_capacity - len(lift_people)
             # Remove people from floor_list
@@ -192,29 +192,31 @@ def random_testing(algorithm="LOOK", number_of_people=100, lift_capacity=5):
             for request in people:
                 if counter == max_can_move:
                     break
-                if request == current_floor:
+                if request == lift_manager.current_floor:
                     people.remove(request)
                     counter += 1
 
                     target_floor = random.randint(0, floors - 1)
-                    while target_floor == current_floor:
+                    while target_floor == lift_manager.current_floor:
                         target_floor = random.randint(0, floors - 1)
 
-                    lift_queue.enqueue(Call(target_floor, True))
+                    lift_manager.lift_queue.enqueue(Call(target_floor, True))
                     lift_people.append(target_floor)
+                    lift_manager.add_person()
 
         else:
             # Can take everyone
             # Removes the people from the list
-            people = [request for request in people if request != current_floor]
+            people = [request for request in people if request != lift_manager.current_floor]
             for _ in range(people_on_floor):
                 # Make a random internal request
                 target_floor = random.randint(0, floors - 1)
                 while target_floor == current_floor:
                     target_floor = random.randint(0, floors - 1)
 
-                lift_queue.enqueue(Call(target_floor, True))
+                lift_manager.lift_queue.enqueue(Call(target_floor, True))
                 lift_people.append(target_floor)
+                lift_manager.add_person()
 
     print(f"The lift travelled {total_floors_travelled} floors.")
     return total_floors_travelled, people_moved
@@ -226,21 +228,28 @@ def floors_vs_people_graph(number_of_tests):
     floors_traversed_look = []
     people_served_look = []
 
-    for algorithm in ["LOOK", "SCAN"]:
-        for x in range(1, number_of_tests, 5):
-
-            floors_traversed, num_people_served = random_testing(algorithm, number_of_people=x, lift_capacity=20)
-
-            if algorithm == "LOOK":
-                floors_traversed_look.append(floors_traversed)
-                people_served_look.append(num_people_served)
-            elif algorithm == "SCAN":
+    # for algorithm in ["LOOK", "SCAN"]:
+    for m in [True, False]:
+        for x in range(5, number_of_tests):
+            floors_traversed, num_people_served = random_testing("SCAN", number_of_people=x, lift_capacity=1,
+                                                                 ignore_weight=m)
+            if m:
                 floors_traversed_scan.append(floors_traversed)
                 people_served_scan.append(num_people_served)
+            else:
+                floors_traversed_look.append(floors_traversed)
+                people_served_look.append(num_people_served)
+
+            # if algorithm == "LOOK":
+            #     floors_traversed_look.append(floors_traversed)
+            #     people_served_look.append(num_people_served)
+            # elif algorithm == "SCAN":
+            #     floors_traversed_scan.append(floors_traversed)
+            #     people_served_scan.append(num_people_served)
 
     plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_scan, people_served_scan, color='blue', label='SCAN', alpha=0.7, marker='o')
-    plt.scatter(floors_traversed_look, people_served_look, color='red', label='LOOK', alpha=0.7, marker='s')
+    plt.scatter(floors_traversed_scan, people_served_scan, color='blue', label='Ignore Weight', alpha=0.7, marker='o')
+    plt.scatter(floors_traversed_look, people_served_look, color='red', label='Had Weight', alpha=0.7, marker='s')
 
     plt.xlabel("Floors Traversed")
     plt.ylabel("People Served")
@@ -250,8 +259,9 @@ def floors_vs_people_graph(number_of_tests):
     plt.show()
 
 
-for x in range(15):
-    file_testing(f"input{x + 1}.txt", "LOOK", 0, "up")
+# for x in range(15):
+#     file_testing(f"input{x + 1}.txt", "LOOK", 0, "up")
 
 if __name__ == '__main__':
-    floors_vs_people_graph(2000)
+    floors_vs_people_graph(1000)
+    # random_testing("SCAN")
