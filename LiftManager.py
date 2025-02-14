@@ -1,24 +1,10 @@
-from LiftQueue import LiftQueue
-from Call import Call
+from LiftQueueCopy import LiftQueue
+
 
 class LiftManager:
-    def __init__(self, total_floors, capacity, lift):
-        self.total_floors = total_floors
+    def __init__(self, capacity, direction, current_floor):
         self.capacity = capacity
         self.passenger_count = 0
-        self.call_queue = LiftQueue()
-
-
-    def external_request(self, floor):
-        self.call_queue.enqueue(Call(floor, False))
-
-    def internal_request(self, floor):
-        if self.passenger_count >= self.capacity:
-            print("Lift is full! No more selections allowed.")
-            # Modern lifts have sensors that now skip external requests
-            return
-
-        #Check if call already exists in queue before adding it again
-
-        self.call_queue.enqueue(Call(floor, True))
-        self.passenger_count += 1
+        self.lift_queue = LiftQueue()
+        self.current_direction = direction
+        self.current_floor = current_floor
