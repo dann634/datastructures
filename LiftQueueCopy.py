@@ -41,3 +41,6 @@ class LiftQueue:
         for call in self.calls:
             list.append(call.requested_floor)
         print(list)
+
+    def size(self):
+        return len(self.calls)

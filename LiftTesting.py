@@ -1,4 +1,5 @@
 import random
+from unittest.mock import DEFAULT
 
 from matplotlib import pyplot as plt
 
@@ -35,7 +36,7 @@ def file_testing(filename : str,
     num_floors, min_floor, lift_capacity = file_lines[1].split(",")
     num_floors = int(num_floors.strip())
     min_floor = int(min_floor.strip())
-    max_floor = min_floor + num_floors
+    max_floor = min_floor + num_floors - 1
     lift_capacity = int(lift_capacity.strip())
 
     floor_requests = {}
@@ -60,8 +61,10 @@ def file_testing(filename : str,
         ignore_weight=DEFAULT_IGNORE_WEIGHT,
         use_priority_queue=DEFAULT_USE_PRIORITY
     )
+
     while floor_requests:
         people_served = people_served + 1
+        random.seed(None)
         external_floor_request = random.choice(list(floor_requests.keys()))
         lift_manager.lift_queue.enqueue(Call(external_floor_request, False))
 
@@ -78,22 +81,17 @@ def file_testing(filename : str,
 
     for x in range(lift_manager.lift_queue.size()):
         start_floor = lift_manager.current_floor
+        next_floor = lift_manager.process_next_request()
+        lift_manager.current_floor = next_floor
 
-        if algorithm == Algorithm.SCAN:
-            current_direction, next_floor, reached_limit = lift_manager.process_next_request()
-        elif algorithm == Algorithm.LOOK:
-            current_direction, next_floor = lift_manager.process_next_request()
+        if algorithm == Algorithm.SCAN and lift_manager.reached_limit:
+            if lift_manager.current_direction == "up":
+                floors_traversed = (start_floor - min_floor) + (lift_manager.current_floor - min_floor)
+            elif lift_manager.current_direction == "down":
+                floors_traversed = (max_floor - start_floor) + (max_floor - lift_manager.current_floor)
 
-            lift_manager.current_floor = next_floor
-
-            if algorithm == Algorithm.SCAN and reached_limit:
-                if lift_manager.current_direction == "up":
-                    floors_traversed = (max_floor - lift_manager.current_floor) + (max_floor - next_floor)
-                elif lift_manager.current_direction == "down":
-                    floors_traversed = (lift_manager.current_floor - min_floor) + (next_floor - min_floor)
-
-            else:
-                floors_traversed = abs(lift_manager.current_floor - next_floor)
+        else:
+            floors_traversed = abs(start_floor - lift_manager.current_floor)
 
         total_floors_traversed = total_floors_traversed + floors_traversed
         print(f"The lift has traveled from floor {start_floor} to floor {lift_manager.current_floor}. It has traversed {floors_traversed} floor(s).")
@@ -101,6 +99,8 @@ def file_testing(filename : str,
     print()
     print(f"The lift traveled a total of {total_floors_traversed} floor(s) when serving {people_served} people.")
     return floor_requests, people_served
+
+file_testing("input1.txt", Algorithm.SCAN, start_floor =0, start_direction="up")
 
 
 """
@@ -267,5 +267,5 @@ def generate_graph(
     plt.grid(True)
     plt.show()
 
-if __name__ == '__main__':
-    scan_vs_look()
+# if __name__ == '__main__':
+#     scan_vs_look()
