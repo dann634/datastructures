@@ -104,16 +104,7 @@ def file_testing(filename : str,
 
 """
 RANDOM_TESTING
-
-ASSUMPTONS:
-- Lift has infinite capacity
-
-FUNCTIONS:
-- 'People' are just numbers in a list (first the floor they spawn on then the target floor)
-- After lift visits every floor once there is no one waiting
 """
-
-
 def random_testing(
         algorithm : Algorithm,
         number_of_people=DEFAULT_MAX_PEOPLE,
@@ -222,7 +213,6 @@ def random_testing(
                 lift_people.append(target_floor)
                 lift_manager.add_person()
 
-    print(f"The lift travelled {total_floors_travelled} floors.")
     return total_floors_travelled
 
 
@@ -256,32 +246,13 @@ def scan_vs_look():
         people_served_scan,
         floors_traversed_look,
         people_served_look,
-        "SCAN vs LOOK Performance"
+        graph_title="SCAN vs LOOK Performance",
+        line1_label="SCAN",
+        line2_label="LOOK",
     )
 
     print("Test 1: Ran Successfully")
 
-
-
-
-
-def floors_vs_people_graph(number_of_tests):
-    floors_traversed_scan = []
-    people_served_scan = []
-    floors_traversed_look = []
-    people_served_look = []
-
-    # for algorithm in ["LOOK", "SCAN"]:
-    for m in [True, False]:
-        for x in range(5, number_of_tests):
-            floors_traversed, num_people_served = random_testing("SCAN", number_of_people=x, lift_capacity=20,
-                                                                 ignore_weight=m)
-            if m:
-                floors_traversed_scan.append(floors_traversed)
-                people_served_scan.append(num_people_served)
-            else:
-                floors_traversed_look.append(floors_traversed)
-                people_served_look.append(num_people_served)
 
 
 
@@ -290,11 +261,13 @@ def generate_graph(
         people_served_1 : [int],
         floors_traversed_2 : [int],
         people_served_2 : [int],
-        graph_title : str
+        graph_title : str,
+        line1_label : str,
+        line2_label : str,
 ):
     plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_1, people_served_1, color='blue', label='Ignore Weight', alpha=0.7, marker='o')
-    plt.scatter(floors_traversed_2, people_served_2, color='red', label='Had Weight', alpha=0.7, marker='s')
+    plt.scatter(floors_traversed_1, people_served_1, color='blue', label=line1_label, alpha=0.7, marker='o')
+    plt.scatter(floors_traversed_2, people_served_2, color='red', label=line2_label, alpha=0.7, marker='s')
 
     plt.xlabel("Floors Traversed")
     plt.ylabel("People Served")
