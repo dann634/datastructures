@@ -11,7 +11,7 @@ from LOOK import look
 from SCAN import scan
 
 
-def file_testing(filename, algorithm, start_floor, start_direction, min_floor=0):
+def file_testing(filename, algorithm, start_floor, start_direction):
     print("*" * 40)
     print(f"TEST USING {algorithm} WITH FILE {filename}")
     print("*" * 40)
@@ -231,7 +231,7 @@ def floors_vs_people_graph(number_of_tests):
     # for algorithm in ["LOOK", "SCAN"]:
     for m in [True, False]:
         for x in range(5, number_of_tests):
-            floors_traversed, num_people_served = random_testing("SCAN", number_of_people=x, lift_capacity=1,
+            floors_traversed, num_people_served = random_testing("SCAN", number_of_people=x, lift_capacity=20,
                                                                  ignore_weight=m)
             if m:
                 floors_traversed_scan.append(floors_traversed)
