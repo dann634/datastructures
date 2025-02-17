@@ -1,19 +1,16 @@
 import random
-from unittest.mock import DEFAULT
 
 from matplotlib import pyplot as plt
 
 from AlgorithmEnum import Algorithm
 from LiftManager import LiftManager
-from LiftQueue import LiftQueueR
-from LiftQueueCopy import LiftQueue
 from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
-DEFAULT_MIN_PEOPLE = 3
-DEFAULT_MAX_PEOPLE = 4
+DEFAULT_MIN_PEOPLE = 5
+DEFAULT_MAX_PEOPLE = 60
 DEFAULT_PEOPLE_STEP = 1
-DEFAULT_LIFT_CAPACITY = 4
+DEFAULT_LIFT_CAPACITY = 2
 DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 5
 DEFAULT_USE_PRIORITY = True
@@ -100,8 +97,6 @@ def file_testing(filename : str,
     print(f"The lift traveled a total of {total_floors_traversed} floor(s) when serving {people_served} people.")
     return floor_requests, people_served
 
-file_testing("input1.txt", Algorithm.SCAN, start_floor =0, start_direction="up")
-
 
 """
 RANDOM_TESTING
@@ -110,7 +105,8 @@ def random_testing(
         algorithm : Algorithm,
         number_of_people=DEFAULT_MAX_PEOPLE,
         lift_capacity=DEFAULT_LIFT_CAPACITY,
-        ignore_weight=DEFAULT_IGNORE_WEIGHT
+        ignore_weight=DEFAULT_IGNORE_WEIGHT,
+        use_priority=DEFAULT_USE_PRIORITY
 ):
 
 
@@ -131,7 +127,7 @@ def random_testing(
         current_floor=0,
         floors=floors,
         ignore_weight=ignore_weight,
-        use_priority_queue=False
+        use_priority_queue=use_priority
     )
 
 
@@ -142,7 +138,7 @@ def random_testing(
 
     while len(people) > 0 or len(lift_people) > 0:
         # Run the loop
-        current_direction, next_floor = lift_manager.process_next_request()
+        next_floor = lift_manager.process_next_request()
 
         if lift_manager.reached_limit:
             floors_traversed = 0
@@ -210,6 +206,7 @@ def random_testing(
                 lift_people.append(target_floor)
                 lift_manager.add_person()
 
+    print(f"{ignore_weight} : total_floors_travelled")
     return total_floors_travelled
 
 
@@ -246,6 +243,76 @@ def scan_vs_look():
     print("Test 1: Ran Successfully")
 
 
+def scan_vs_look_prio():
+    floors_traversed_scan = []
+    floors_traversed_look = []
+    for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
+        for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
+            floors_traversed = random_testing(
+                algorithm=algorithm,
+                number_of_people=people,
+                use_priority=True
+            )
+
+            if algorithm == Algorithm.SCAN:
+                floors_traversed_scan.append(floors_traversed)
+            elif algorithm == Algorithm.LOOK:
+                floors_traversed_look.append(floors_traversed)
+
+    generate_graph(
+        floors_traversed_1=floors_traversed_scan,
+        people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
+        floors_traversed_2=floors_traversed_look,
+        graph_title="SCAN vs LOOK Priority Queue Performance",
+        line1_label="SCAN",
+        line2_label="LOOK",
+    )
+
+    print("Test 2: Ran Successfully")
+
+
+def scan_vs_look_weight_sensor():
+    floors_traversed_scan = []
+    floors_traversed_look = []
+    floors_traversed_scan_weight = []
+    floors_traversed_look_weight = []
+    people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
+
+    for use_weight in [True, False]:
+        for algorithm in [Algorithm.SCAN]:
+            for people in people_served:
+                floors_traversed = random_testing(
+                    algorithm=algorithm,
+                    number_of_people=people,
+                    ignore_weight=use_weight
+                )
+
+                if use_weight:
+                    if algorithm == Algorithm.SCAN:
+                        floors_traversed_scan_weight.append(floors_traversed)
+                    elif algorithm == Algorithm.LOOK:
+                        floors_traversed_look_weight.append(floors_traversed)
+                else:
+                    if algorithm == Algorithm.SCAN:
+                        floors_traversed_scan.append(floors_traversed)
+                    elif algorithm == Algorithm.LOOK:
+                        floors_traversed_look.append(floors_traversed)
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(floors_traversed_scan, people_served, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
+    plt.scatter(floors_traversed_scan_weight, people_served, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
+    # plt.scatter(floors_traversed_look, people_served, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
+    # plt.scatter(floors_traversed_look_weight, people_served, color='firebrick', label="LOOK - Sensor", alpha=0.7, marker='s')
+
+    plt.xlabel("Floors Traversed")
+    plt.ylabel("People Served")
+    plt.title("Weight Sensor Performance (SCAN and LOOK)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    print("Test 3: Ran Successfully")
+
 
 
 def generate_graph(
@@ -267,5 +334,5 @@ def generate_graph(
     plt.grid(True)
     plt.show()
 
-# if __name__ == '__main__':
-#     scan_vs_look()
+if __name__ == '__main__':
+    scan_vs_look_weight_sensor()

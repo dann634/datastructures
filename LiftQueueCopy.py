@@ -11,15 +11,18 @@ class LiftQueue:
 
         if not ignore_weight and is_lift_full:
             #Serve only internal calls
+            call_found = None
             for call in self.calls:
                 if call.isInternal:
-                    self.calls.remove(call)
-                    return call
+                    call_found = call
+                    break
+            if call_found:
+                self.calls.remove(call_found)
+                return call_found
 
         if len(self.calls) > 0:
-            call = self.calls[0]
-            self.calls.remove(call)
-            return call
+            return self.calls.pop(0)
+
         return None
 
     def peek(self):
