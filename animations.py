@@ -2,12 +2,6 @@ import random
 
 import pygame
 
-from LiftManager import LiftManager
-from SCAN import scan
-from LOOK import look
-from LiftQueue import LiftQueue
-from Call import Call
-
 rand = random.Random()
 
 floor_people = [] #2D list
@@ -31,13 +25,11 @@ lift_x = (screen_width / 2) - (lift_width / 2)
 lift_y = (floors - 1) * floor_spacing
 floors_available = []
 person_spacing = 10
-spawn_rate = 0.02
+spawn_rate = 0.4
 lift_capacity = 4
 people_leaving = []
-game_speed = 2
-lift_wait_delay = 1000
-
-people_count = 50
+game_speed = 8
+lift_wait_delay = 500
 
 def draw_tower():
     for i in range(floors + 1):  # +1 to include the top floor line
@@ -106,9 +98,10 @@ class Lift:
         for person in self.people:
             person.move_with_lift(new_y)
 
+class CallManager:
+    def __init__(self):
+        pass
 
-    def is_full(self):
-        return len(self.people) == lift_capacity
 
 
 
@@ -172,56 +165,34 @@ def start_animation():
 
     lift = Lift()
     last_floor_change_time = 0
-    direction = "up"
-    lift_queue = LiftQueue()
 
-    dequeue_flag = True
-
+    call_manager = CallManager()
 
     run = True
     while run:
 
-        lift_data = (lift_queue, direction, lift.current_floor)
-
         clock.tick(120)
 
-        lift_queue.print_calls()
-
-
-        for n, floor in enumerate(floor_people):
-            if len(floor) > 0:
-                lift_queue.enqueue(Call(n, False))
-
-        for people in lift.people:
-            lift_queue.enqueue(Call(people.target_floor, True))
-
-
-        global people_count
-        if len(floors_available) > 0 and random.random() <= spawn_rate and people_count > 0:
+        if len(floors_available) > 0 and random.random() <= spawn_rate:
             add_random_person()
-            people_count -= 1
 
         if lift.y == lift.target_y and not lift.hasMovedPeople:
             lift.current_floor = lift.target_floor
             move_lift_people(lift)
             lift.hasMovedPeople = True
-            dequeue_flag = True
-
 
         current_time = pygame.time.get_ticks()
         # Check if 3 seconds have passed since the last floor change
         if current_time - last_floor_change_time >= lift_wait_delay:
             # Choose a random floor for the lift to move to
+            target_floor = rand.randint(0, floors - 1)
+            while target_floor == lift.current_floor:
+                target_floor = rand.randint(0, floors - 1)
+            lift.hasMovedPeople = False
+            lift.move_to_floor(target_floor)
 
-            if not lift_queue.isEmpty() and dequeue_flag:
-                current_direction, next_floor = look(lift_data)
-
-                lift.hasMovedPeople = False
-                dequeue_flag = False
-                lift.move_to_floor(next_floor)
-
-                # Update the last floor change time
-                last_floor_change_time = current_time
+            # Update the last floor change time
+            last_floor_change_time = current_time
 
         lift.update()
         move_sprites(lift)
@@ -268,6 +239,11 @@ def remove_old_sprites(old_sprites, old_people):
         people_leaving.remove(person)
 
 
+
+
+
+
+
 class Person:
     def __init__(self):
         self.radius = 15
@@ -276,8 +252,6 @@ class Person:
 
         self.starting_floor = rand.choice(floors_available)
         self.target_floor = rand.randint(0, floors - 1)
-        self.can_call_external = True
-        self.can_call_internal = True
 
         self.sprite = None
 
@@ -372,5 +346,3 @@ class Person:
 if __name__ == '__main__':
     initialise_floors()
     start_animation()
-
-
