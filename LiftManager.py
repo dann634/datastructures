@@ -12,10 +12,7 @@ class LiftManager:
         self.floors = floors
         self.ignore_weight = ignore_weight
 
-        if algorithm == Algorithm.SCAN:
-            self.algorithm = self.__scan
-        elif algorithm == Algorithm.LOOK:
-            self.algorithm = self.__look
+        self.algorithm = algorithm
 
         #SCAN ONLY
         self.reached_limit = False
@@ -23,7 +20,10 @@ class LiftManager:
 
 
     def process_next_request(self):
-        return self.algorithm()
+        if self.algorithm == Algorithm.SCAN:
+            return self.__scan()
+        elif self.algorithm == Algorithm.LOOK:
+            return self.__look()
 
 
     def __scan(self):
@@ -33,14 +33,13 @@ class LiftManager:
         next_request = self.lift_queue.dequeue(self.ignore_weight,self.is_lift_full())  # Gets the next request from the queue
 
         if next_request is None:
-            return self.current_direction, self.current_floor, self.reached_limit
+            return self.current_direction, self.current_floor
 
         next_requested_floor = next_request.requested_floor
-        next_floor = 0
 
         # If the lift is already at the requested floor or no request exists
         if next_requested_floor == self.current_floor:
-            return self.current_direction, next_requested_floor, self.reached_limit
+            return self.current_direction, next_requested_floor
 
         # Move in the correct direction
         if self.current_direction == "up":
@@ -59,7 +58,7 @@ class LiftManager:
                 self.reached_limit = True
                 next_floor = next_requested_floor  # Move to the next floor
 
-        return self.current_direction, next_floor, self.reached_limit
+        return self.current_direction, next_requested_floor
 
 
     def __look(self):

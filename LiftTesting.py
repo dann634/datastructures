@@ -1,5 +1,4 @@
 import random
-from unittest.mock import DEFAULT
 
 from matplotlib import pyplot as plt
 
@@ -141,22 +140,18 @@ def random_testing(
 
     while len(people) > 0 or len(lift_people) > 0:
         # Run the loop
-        if algorithm == Algorithm.SCAN:
-            current_direction, next_floor, reached_limit = lift_manager.process_next_request()
-        elif algorithm == Algorithm.LOOK:
-            current_direction, next_floor = lift_manager.process_next_request()
+        current_direction, next_floor = lift_manager.process_next_request()
 
+        if lift_manager.reached_limit:
+            floors_traversed = 0
+            if lift_manager.current_direction == "up":
+                floors_traversed = (floors - lift_manager.current_floor) + (floors - next_floor)
+            elif lift_manager.current_direction == "down":
+                floors_traversed = lift_manager.current_floor + next_floor
 
-            if reached_limit:
-                floors_traversed = 0
-                if lift_manager.current_direction == "up":
-                    floors_traversed = (floors - lift_manager.current_floor) + (floors - next_floor)
-                elif lift_manager.current_direction == "down":
-                    floors_traversed = lift_manager.current_floor + next_floor
+            total_floors_travelled += floors_traversed
 
-                total_floors_travelled += floors_traversed
-
-        if not reached_limit:
+        if not lift_manager.reached_limit:
             total_floors_travelled += abs(next_floor - lift_manager.current_floor)
         lift_manager.current_floor = next_floor
 
@@ -222,9 +217,7 @@ SCAN vs LOOK (Queue)
 """
 def scan_vs_look():
     floors_traversed_scan = []
-    people_served_scan = []
     floors_traversed_look = []
-    people_served_look = []
     for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
         for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
             floors_traversed = random_testing(
@@ -236,16 +229,13 @@ def scan_vs_look():
 
             if algorithm == Algorithm.SCAN:
                 floors_traversed_scan.append(floors_traversed)
-                people_served_scan.append(people)
-            else:
+            elif algorithm == Algorithm.LOOK:
                 floors_traversed_look.append(floors_traversed)
-                people_served_look.append(people)
 
     generate_graph(
-        floors_traversed_scan,
-        people_served_scan,
-        floors_traversed_look,
-        people_served_look,
+        floors_traversed_1=floors_traversed_scan,
+        people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
+        floors_traversed_2=floors_traversed_look,
         graph_title="SCAN vs LOOK Performance",
         line1_label="SCAN",
         line2_label="LOOK",
@@ -258,16 +248,15 @@ def scan_vs_look():
 
 def generate_graph(
         floors_traversed_1 : [int],
-        people_served_1 : [int],
         floors_traversed_2 : [int],
-        people_served_2 : [int],
+        people_served : [int],
         graph_title : str,
         line1_label : str,
         line2_label : str,
 ):
     plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_1, people_served_1, color='blue', label=line1_label, alpha=0.7, marker='o')
-    plt.scatter(floors_traversed_2, people_served_2, color='red', label=line2_label, alpha=0.7, marker='s')
+    plt.scatter(floors_traversed_1, people_served, color='blue', label=line1_label, alpha=0.7, marker='o')
+    plt.scatter(floors_traversed_2, people_served, color='red', label=line2_label, alpha=0.7, marker='s')
 
     plt.xlabel("Floors Traversed")
     plt.ylabel("People Served")
