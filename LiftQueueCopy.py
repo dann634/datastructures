@@ -17,7 +17,9 @@ class LiftQueue:
                     return call
 
         if len(self.calls) > 0:
-            return self.calls.pop()
+            call = self.calls[0]
+            self.calls.remove(call)
+            return call
         return None
 
     def peek(self):

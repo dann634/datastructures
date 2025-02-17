@@ -9,12 +9,13 @@ from LiftQueueCopy import LiftQueue
 from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
-DEFAULT_MIN_PEOPLE = 5
-DEFAULT_MAX_PEOPLE = 2000
-DEFAULT_PEOPLE_STEP = 5
-DEFAULT_LIFT_CAPACITY = 12
+DEFAULT_MIN_PEOPLE = 3
+DEFAULT_MAX_PEOPLE = 4
+DEFAULT_PEOPLE_STEP = 1
+DEFAULT_LIFT_CAPACITY = 4
 DEFAULT_IGNORE_WEIGHT = False
-DEFAULT_FLOORS = 30
+DEFAULT_FLOORS = 5
+DEFAULT_USE_PRIORITY = True
 
 
 def file_testing(filename : str,
@@ -56,7 +57,8 @@ def file_testing(filename : str,
         direction=start_direction,
         current_floor=start_floor,
         floors=num_floors,
-        ignore_weight=DEFAULT_IGNORE_WEIGHT
+        ignore_weight=DEFAULT_IGNORE_WEIGHT,
+        use_priority_queue=DEFAULT_USE_PRIORITY
     )
     while floor_requests:
         people_served = people_served + 1
@@ -114,7 +116,6 @@ def random_testing(
 
     # Lift Variables
     floors = DEFAULT_FLOORS
-    reached_limit = False
 
     # People lists
     people = []
@@ -129,7 +130,8 @@ def random_testing(
         direction="up",
         current_floor=0,
         floors=floors,
-        ignore_weight=ignore_weight
+        ignore_weight=ignore_weight,
+        use_priority_queue=False
     )
 
 

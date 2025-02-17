@@ -3,7 +3,7 @@ from AlgorithmEnum import Algorithm
 
 
 class LiftManager:
-    def __init__(self, algorithm, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, algorithm, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
         self.capacity = capacity
         self.passenger_count = 0
         self.lift_queue = LiftQueue()
@@ -11,6 +11,7 @@ class LiftManager:
         self.current_floor = current_floor
         self.floors = floors
         self.ignore_weight = ignore_weight
+        self.use_priority = use_priority_queue
 
         self.algorithm = algorithm
 
