@@ -1,20 +1,32 @@
 from LiftQueueCopy import LiftQueue
+from AlgorithmEnum import Algorithm
 
 
 class LiftManager:
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, algorithm, capacity, direction, current_floor, floors, ignore_weight):
         self.capacity = capacity
         self.passenger_count = 0
         self.lift_queue = LiftQueue()
         self.current_direction = direction
         self.current_floor = current_floor
-        self.reached_limit = False
         self.floors = floors
-
         self.ignore_weight = ignore_weight
+        self.algorithm = algorithm
+
+        #SCAN ONLY
+        self.reached_limit = False
 
 
-    def scan(self):
+
+    def process_next_request(self):
+        match self.algorithm:
+            case Algorithm.LOOK:
+                return self.__look()
+            case Algorithm.SCAN:
+                return self.__scan()
+
+
+    def __scan(self):
 
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
 
@@ -49,6 +61,32 @@ class LiftManager:
                 self.reached_limit = True  # Made true to show that the lift has gone to the top or bottom of the building
 
         return self.current_direction, next_floor, self.reached_limit
+
+
+
+    def __look(self):
+        next_request = self.lift_queue.dequeue(self.ignore_weight, self.is_lift_full())
+        next_floor = next_request.requested_floor  # Gets the next floor from the queue
+
+        # If the lift is already at the requested floor or no request exists
+        if next_floor is None:
+            return self.current_direction, self.current_floor
+
+        # If the lift is moving up and the requested floor is above the current floor
+        if next_floor > self.current_floor and self.current_direction == "up":
+
+            return self.current_direction, next_floor
+
+        # If the lift is moving down and the requested floor is below the current floor
+        elif next_floor < self.current_floor and self.current_direction == "down":
+            return self.current_direction, next_floor
+
+        # If the lift is moving in the wrong direction the direction is flipped
+        elif self.current_direction == "up":
+            return "down", next_floor
+
+        elif self.current_direction == "down":
+            return "up", next_floor
 
 
     def is_lift_full(self):

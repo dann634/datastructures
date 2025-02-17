@@ -11,9 +11,6 @@ def look(lift_data):
     # If the lift is moving up and the requested floor is above the current floor
     if next_floor > current_floor and current_direction == "up":
 
-
-
-
         num_people_in_lift += -1 if is_internal else 1
         return current_direction, next_floor
 
