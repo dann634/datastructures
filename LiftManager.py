@@ -1,3 +1,4 @@
+from Call import Call
 from LiftQueueCopy import LiftQueue
 from AlgorithmEnum import Algorithm
 
@@ -31,7 +32,7 @@ class LiftManager:
 
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
 
-        next_request = self.lift_queue.dequeue(self.ignore_weight,self.is_lift_full())  # Gets the next request from the queue
+        next_request : Call = self.lift_queue.dequeue(self.ignore_weight,self.is_lift_full())  # Gets the next request from the queue
 
         if next_request is None:
             return self.current_floor
