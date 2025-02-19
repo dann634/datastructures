@@ -15,7 +15,10 @@ DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 30
 DEFAULT_USE_PRIORITY = True
 
-
+"""
+Runs the tests from the text files
+Used to test very specific scenarios
+"""
 def file_testing(filename : str,
                  algorithm : Algorithm,
                  start_floor : int,
@@ -100,6 +103,7 @@ def file_testing(filename : str,
 
 """
 RANDOM_TESTING
+Randomly selects a floor for a request to spawn on
 """
 def random_testing(
         algorithm : Algorithm,
@@ -109,16 +113,12 @@ def random_testing(
         use_priority=DEFAULT_USE_PRIORITY
 ):
 
-
     # Lift Variables
     floors = DEFAULT_FLOORS
 
     # People lists
     people = []
     lift_people = []
-
-    # Tracking metrics
-    total_floors_travelled = 0
 
     lift_manager = LiftManager(
         algorithm=algorithm,
@@ -136,6 +136,17 @@ def random_testing(
         lift_manager.lift_queue.enqueue(Call(starting_floor, False))
         people.append(starting_floor)
 
+    return run_algorithm(lift_manager, people, lift_people)
+
+
+
+"""
+The main loop for running the lift algorithm
+"""
+def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int]) -> int:
+
+    total_floors_travelled = 0
+
     while len(people) > 0 or len(lift_people) > 0:
         # Run the loop
         next_floor = lift_manager.process_next_request()
@@ -143,7 +154,7 @@ def random_testing(
         if lift_manager.reached_limit:
             floors_traversed = 0
             if lift_manager.current_direction == "up":
-                floors_traversed = (floors - lift_manager.current_floor) + (floors - next_floor)
+                floors_traversed = (lift_manager.floors - lift_manager.current_floor) + (lift_manager.floors - next_floor)
             elif lift_manager.current_direction == "down":
                 floors_traversed = lift_manager.current_floor + next_floor
 
@@ -180,7 +191,7 @@ def random_testing(
 
         if people_on_floor > lift_manager.get_free_space():
             # Too many people
-            max_can_move = lift_capacity - len(lift_people)
+            max_can_move = lift_manager.capacity - len(lift_people)
             # Remove people from floor_list
             counter = 0
             for request in people:
@@ -190,9 +201,9 @@ def random_testing(
                     people.remove(request)
                     counter += 1
 
-                    target_floor = random.randint(0, floors - 1)
+                    target_floor = random.randint(0, lift_manager.floors - 1)
                     while target_floor == lift_manager.current_floor:
-                        target_floor = random.randint(0, floors - 1)
+                        target_floor = random.randint(0, lift_manager.floors - 1)
 
                     lift_manager.lift_queue.enqueue(Call(target_floor, True))
                     lift_people.append(target_floor)
@@ -204,9 +215,9 @@ def random_testing(
             people = [request for request in people if request != lift_manager.current_floor]
             for _ in range(people_on_floor):
                 # Make a random internal request
-                target_floor = random.randint(0, floors - 1)
+                target_floor = random.randint(0, lift_manager.floors - 1)
                 while target_floor == lift_manager.current_floor:
-                    target_floor = random.randint(0, floors - 1)
+                    target_floor = random.randint(0, lift_manager.floors - 1)
 
                 lift_manager.lift_queue.enqueue(Call(target_floor, True))
                 lift_people.append(target_floor)
@@ -218,6 +229,15 @@ def random_testing(
 """
 TEST 1:
 SCAN vs LOOK (Queue)
+
+Testing Values:
+People: 2000
+Floors: 30
+Capacity: 12
+
+Lift Settings:
+Weight Sensor: ON
+Priority Queue: OFF
 """
 def scan_vs_look():
     floors_traversed_scan = []
@@ -245,9 +265,21 @@ def scan_vs_look():
 
     print("Test 1: Ran Successfully")
 
+
+
+
 """
 TEST 2
 SCAN vs LOOK (Priority Queue)
+
+Testing Values:
+People: 2000
+Floors: 30
+Capacity: 12
+
+Lift Settings:
+Weight Sensor: ON
+Priority Queue: ON
 """
 def scan_vs_look_prio():
     floors_traversed_scan = []
@@ -277,6 +309,21 @@ def scan_vs_look_prio():
     print("Test 2: Ran Successfully")
 
 
+
+"""
+TEST 3
+Testing how a weight sensor affects the efficiency of a lift
+(When the lift is full only serve internal calls)
+
+Testing Values:
+People: 2000
+Capacity: 12
+Floors: 30
+
+Lift Settings:
+Weight Sensor: (ON/OFF)
+Priority Queue: ON
+"""
 def scan_vs_look_weight_sensor():
     floors_traversed_scan = []
     floors_traversed_look = []
@@ -321,8 +368,13 @@ def scan_vs_look_weight_sensor():
 
 
 """
-TEST 3
+TEST 4
 Changes in capacity (SCAN vs LOOK)
+
+Testing Values:
+People: 2000
+Capacity - (1-500)
+Floors: 30
 
 Settings:
 - Use Priority: ON
@@ -332,20 +384,20 @@ def capacity_test():
     floors_traversed_scan = []
     floors_traversed_look = []
     graph_y = []
-    capacity_list = range(1, 200, 1)
-    for _ in range(3): #All tests repeat 3 times
+    capacity_list = range(1, 500, 1)
+    for _ in range(1): #All tests repeat 3 times
         for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
             for capacity in capacity_list:
                 floors_traversed = random_testing(
                     algorithm=algorithm,
                     lift_capacity=capacity,
-                    number_of_people=500
+                    number_of_people=500,
                 )
 
-                graph_y.append(capacity)
 
                 if algorithm == Algorithm.SCAN:
                     floors_traversed_scan.append(floors_traversed)
+                    graph_y.append(capacity)
                 elif algorithm == Algorithm.LOOK:
                     floors_traversed_look.append(floors_traversed)
 
@@ -361,6 +413,70 @@ def capacity_test():
     plt.show()
 
 
+"""
+TEST 5
+All requests coming from one floor (SCAN vs LOOK)
+
+Testing Values:
+People: 2000
+Floors: 30
+Capacity: 12
+
+Lift Settings:
+- Weight Sensor: ON
+- Priority Queue: ON
+"""
+def overload_one_floor():
+
+    floors = DEFAULT_FLOORS
+
+    floors_traversed_scan = []
+    floors_traversed_look = []
+    people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
+    for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
+        for people in people_served:
+
+            # Choose a random floor to overload
+            chosen_floor = random.randint(0, floors - 1)
+
+            people = [chosen_floor] * people
+            lift_people: [int] = []
+
+            lift_manager = LiftManager(
+                algorithm=algorithm,
+                capacity=DEFAULT_LIFT_CAPACITY,
+                direction="up",
+                current_floor=0,
+                floors=floors,
+                ignore_weight=DEFAULT_IGNORE_WEIGHT,
+                use_priority_queue=DEFAULT_USE_PRIORITY
+            )
+
+
+            floors_travelled = run_algorithm(lift_manager, people, lift_people)
+
+
+            if algorithm == Algorithm.SCAN:
+                floors_traversed_scan.append(floors_travelled)
+            elif algorithm == Algorithm.LOOK:
+                floors_traversed_look.append(floors_travelled)
+
+    generate_graph(
+        floors_traversed_1=floors_traversed_scan,
+        people_served=people_served,
+        floors_traversed_2=floors_traversed_look,
+        graph_title="SCAN vs Look when one floor has lots of requests",
+        line1_label="SCAN",
+        line2_label="LOOK",
+    )
+
+    print("Test 5: Ran Successfully")
+
+
+"""
+Generates the graphs from the data provided
+Plots floors traversed against the amount of people being served
+"""
 def generate_graph(
         floors_traversed_1 : [int],
         floors_traversed_2 : [int],
@@ -380,11 +496,14 @@ def generate_graph(
     plt.grid(True)
     plt.show()
 
-
+"""
+Executes all tests sequentially
+"""
 def run_all_tests():
     scan_vs_look()
     scan_vs_look_prio()
     scan_vs_look_weight_sensor()
 
 if __name__ == '__main__':
-    scan_vs_look()
+    # scan_vs_look()
+    overload_one_floor()
