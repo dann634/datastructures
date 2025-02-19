@@ -8,8 +8,8 @@ from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
-DEFAULT_MAX_PEOPLE = 500
-DEFAULT_PEOPLE_STEP = 2
+DEFAULT_MAX_PEOPLE = 100
+DEFAULT_PEOPLE_STEP = 1
 DEFAULT_LIFT_CAPACITY = 1
 DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 30
@@ -519,7 +519,7 @@ def run_all_tests():
     scan_vs_look_weight_sensor()
 
 if __name__ == '__main__':
-    # scan_vs_look()
-    scan_vs_look_weight_sensor()
+    scan_vs_look()
+    #scan_vs_look_weight_sensor()
     # capacity_test()
     # overload_one_floor()
