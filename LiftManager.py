@@ -54,62 +54,37 @@ class LiftManager:
         return next_requested_floor
 
     def __llook(self):
-        next_floor = None
-        current_best_request = None
+        next_request = self.lift_queue.dequeue_look(
+            ignore_weight=self.ignore_weight,
+            is_lift_full=self.is_lift_full(),
+            current_floor=self.current_floor,
+            direction=self.current_direction,
+        )  # Gets the next request from the queue
 
-        if self.current_direction == "up":
-            if not self.ignore_weight and self.is_lift_full():
-                for index in range(self.lift_queue.size()):
-                    request = self.lift_queue.peek_index(index)
-                    distance_to_request = request.requested_floor - self.current_floor
-                    if distance_to_request >= 0 and request.isInternal:
+        if next_request is None:
+            return self.current_floor
 
+        next_floor = next_request.requested_floor
 
+        if next_floor == self.current_floor:
+            return next_floor
 
+        # If the lift is moving up and the requested floor is above the current floor
+        if next_floor > self.current_floor and self.current_direction == "up":
+            return next_floor
 
+        # If the lift is moving down and the requested floor is below the current floor
+        elif next_floor < self.current_floor and self.current_direction == "down":
+            return next_floor
 
+        # If the lift is moving in the wrong direction the direction is flipped
+        elif self.current_direction == "up":
+            self.current_direction = "down"
+            return next_floor
 
-
-
-
-
-
-
-        if self.current_direction == "up":
-            if not self.ignore_weight and self.is_lift_full():
-                for index in range(self.lift_queue.size()):
-                    request = self.lift_queue.peek_index(index)
-                    if request.requested_floor >= self.current_floor and request.isInternal:
-                        next_floor = self.lift_queue.dequeue_index(index)
-                        break
-
-            else:
-                for index in range(self.lift_queue.size()):
-                    request = self.lift_queue.peek_index(index)
-                    if request.requested_floor >= self.current_floor:
-                        if temp_next_request.requested_floor >= request.requested_floor:
-                            temp_next_request = request
-
-        if self.current_direction == "down":
-            if not self.ignore_weight and self.is_lift_full():
-                for index in range(self.lift_queue.size()):
-                    request = self.lift_queue.peek_index(index)
-                    if request.requested_floor <= self.current_floor and request.isInternal:
-                        next_floor = self.lift_queue.dequeue_index(index)
-                        break
-
-            else:
-                for index in range(self.lift_queue.size()):
-                    request = self.lift_queue.peek_index(index)
-                    if request.requested_floor <= self.current_floor:
-                        next_floor = self.lift_queue.dequeue_index(index)
-                        break
-
-        if next_floor is None:
-            self.current_direction = "down" if self.current_direction == "up" else "up"
-            next_floor = self.__llook()
-
-        return next_floor.requested_floor
+        elif self.current_direction == "down":
+            self.current_direction = "up"
+            return next_floor
 
 
 

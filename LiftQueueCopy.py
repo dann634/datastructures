@@ -22,17 +22,20 @@ class LiftQueue:
         if len(self.calls) > 0:
             return self.calls.pop(0)
 
-
         return None
 
-    def dequeue_look(self, ignore_weight, is_lift_full) -> Call:
+    def dequeue_look(self, ignore_weight, is_lift_full, current_floor, direction) -> Call:
         if not ignore_weight and is_lift_full:
             # Serve only internal calls
+
             call_found = None
             for call in self.calls:
                 if call.isInternal:
                     call_found = call
-                    break
+                    if current_floor < call.requested_floor and direction == "up":
+                        break
+                    elif current_floor < call.requested_floor and direction == "down":
+                        break
             if call_found:
                 self.calls.remove(call_found)
                 return call_found
