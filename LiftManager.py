@@ -19,7 +19,6 @@ class LiftManager:
         self.ignore_weight = ignore_weight
         self.reached_limit = False
         self.lift_queue = None
-        self.total_time = 0
 
     @staticmethod
     def get_instance(algorithm : Algorithm,
@@ -133,14 +132,11 @@ class LiftManagerMyAlgorithm(LiftManager):
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = MinHeap()
-        self.total_time = 0
 
 
     def process_next_request(self):
-        start_time = time.time()
         next_request = self.lift_queue.dequeue(self.current_floor)  # Gets the next request from the queue
-        end_time = time.time()
-        self.total_time += end_time - start_time
+
 
         if next_request is None:
             return self.current_floor
