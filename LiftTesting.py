@@ -3,7 +3,7 @@ import random
 from matplotlib import pyplot as plt
 
 from AlgorithmEnum import Algorithm
-from LiftManager import LiftManager
+from LiftManager import LiftManager, LiftManagerMyAlgorithm
 from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
@@ -143,6 +143,7 @@ def random_testing(
 """
 The main loop for running the lift algorithm
 """
+algorithm_time = 0
 def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int]) -> int:
 
     total_floors_travelled = 0
@@ -223,6 +224,9 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                 lift_people.append(target_floor)
                 lift_manager.add_person()
 
+    global algorithm_time
+    algorithm_time += lift_manager.total_time
+    print(algorithm_time)
     return total_floors_travelled
 
 
@@ -242,8 +246,8 @@ Priority Queue: OFF
 def scan_vs_look():
     floors_traversed_scan = []
     floors_traversed_look = []
-    floors_traversed_llook = []
-    for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.LLOOK]:
+    floors_traversed_myalgorithm = []
+    for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
         for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
             floors_traversed = random_testing(
                 algorithm=algorithm,
@@ -254,8 +258,8 @@ def scan_vs_look():
                 floors_traversed_scan.append(floors_traversed)
             elif algorithm == Algorithm.LOOK:
                 floors_traversed_look.append(floors_traversed)
-            elif algorithm == Algorithm.LLOOK:
-                floors_traversed_llook.append(floors_traversed)
+            elif algorithm == Algorithm.MYALGORITHM:
+                floors_traversed_myalgorithm.append(floors_traversed)
 
         print("Algorithm run")
 
@@ -263,7 +267,7 @@ def scan_vs_look():
         floors_traversed_1=floors_traversed_scan,
         people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
         floors_traversed_2=floors_traversed_look,
-        floors_traversed_3=floors_traversed_llook,
+        floors_traversed_3=floors_traversed_myalgorithm,
         graph_title="SCAN vs LOOK Performance",
         line1_label="SCAN",
         line2_label="LOOK",

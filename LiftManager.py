@@ -1,3 +1,4 @@
+import time
 from re import match
 
 from Call import Call
@@ -19,6 +20,7 @@ class LiftManager:
         self.use_priority = use_priority_queue
         self.reached_limit = False
         self.lift_queue = None
+        self.total_time = 0
 
     @staticmethod
     def get_instance(algorithm : Algorithm,
@@ -31,7 +33,7 @@ class LiftManager:
                 algorithm_obj = LiftManagerSCAN(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
             case Algorithm.LOOK:
                 algorithm_obj = LiftManagerLOOK(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
-            case Algorithm.LLOOK:
+            case Algorithm.MYALGORITHM:
                 algorithm_obj = LiftManagerMyAlgorithm(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
 
         return algorithm_obj
@@ -135,10 +137,14 @@ class LiftManagerMyAlgorithm(LiftManager):
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
         self.lift_queue = MinHeap()
+        self.total_time = 0
 
 
     def process_next_request(self):
+        start_time = time.time()
         next_request = self.lift_queue.dequeue(self.current_floor)  # Gets the next request from the queue
+        end_time = time.time()
+        self.total_time += end_time - start_time
 
         if next_request is None:
             return self.current_floor
