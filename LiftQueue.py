@@ -12,23 +12,11 @@ class LiftQueue:
         if not self.calls:
             return None
 
-        requests_below = []
-        requests_above = []
-        requests_in_direction = None
-        if not ignore_weight:
-            if is_lift_full:
-                for request in self.calls:
-                    if request.requested_floor > current_floor and request.isInternal:
-                        requests_above.append(request)
-                    elif request.requested_floor < current_floor and request.isInternal:
-                        requests_below.append(request)
-
-                # If no requests found get other direction
-                if (direction == "up" and len(requests_above) > 0) or len(requests_below) == 0:
-                    requests_in_direction = requests_above
-                elif (direction == "down" and len(requests_below) > 0) or len(requests_above) == 0:
-                    requests_in_direction = requests_below
-
+        if not ignore_weight and is_lift_full:
+            if direction == "up":
+                requests_in_direction = [call for call in self.calls if call.requested_floor >= current_floor and call.isInternal]
+            elif direction == "down":
+                requests_in_direction = [call for call in self.calls if call.requested_floor <= current_floor and call.isInternal]
 
         else:
             if direction == "up":
@@ -48,8 +36,9 @@ class LiftQueue:
             self.calls.remove(closest_request)
             return closest_request
         else:
-            direction = "down" if direction == "up" else "up"
-            return self.dequeue(ignore_weight, is_lift_full, current_floor, direction)
+            return self.calls.pop(0)
+            # direction = "down" if direction == "up" else "up"
+            # return self.dequeue(ignore_weight, is_lift_full, current_floor, direction)
 
 
 
