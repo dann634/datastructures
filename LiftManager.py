@@ -3,38 +3,37 @@ from re import match
 
 from Call import Call
 from Heap import MinHeap
-from LiftQueueCopy import LiftQueue
+from LiftQueue import LiftQueue
 from AlgorithmEnum import Algorithm
 
 
 
 
 class LiftManager:
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
+    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         self.capacity = capacity
         self.passenger_count = 0
         self.current_direction = direction
         self.current_floor = current_floor
         self.floors = floors
         self.ignore_weight = ignore_weight
-        self.use_priority = use_priority_queue
         self.reached_limit = False
         self.lift_queue = None
         self.total_time = 0
 
     @staticmethod
     def get_instance(algorithm : Algorithm,
-                     capacity, direction, current_floor, floors, ignore_weight, use_priority_queue
+                     capacity, direction, current_floor, floors, ignore_weight
                      ):
         algorithm_obj = None
 
         match algorithm:
             case Algorithm.SCAN:
-                algorithm_obj = LiftManagerSCAN(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+                algorithm_obj = LiftManagerSCAN(capacity, direction, current_floor, floors, ignore_weight)
             case Algorithm.LOOK:
-                algorithm_obj = LiftManagerLOOK(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+                algorithm_obj = LiftManagerLOOK(capacity, direction, current_floor, floors, ignore_weight)
             case Algorithm.MYALGORITHM:
-                algorithm_obj = LiftManagerMyAlgorithm(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+                algorithm_obj = LiftManagerMyAlgorithm(capacity, direction, current_floor, floors, ignore_weight)
 
         return algorithm_obj
 
@@ -57,16 +56,20 @@ class LiftManager:
 
 class LiftManagerSCAN(LiftManager):
 
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
-        super().__init__(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+        super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
 
     def process_next_request(self):
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
 
-        next_request: Call = self.lift_queue.dequeue(self.ignore_weight,
-                                                     self.is_lift_full())  # Gets the next request from the queue
+        next_request = self.lift_queue.dequeue(
+            ignore_weight=self.ignore_weight,
+            is_lift_full=self.is_lift_full(),
+            current_floor=self.current_floor,
+            direction=self.current_direction,
+        )  # Gets the next request from the queue
 
         if next_request is None:
             return self.current_floor
@@ -91,14 +94,14 @@ class LiftManagerSCAN(LiftManager):
 
 class LiftManagerLOOK(LiftManager):
 
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
-        super().__init__(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+        super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
 
 
     def process_next_request(self):
-        next_request = self.lift_queue.dequeue_look(
+        next_request = self.lift_queue.dequeue(
             ignore_weight=self.ignore_weight,
             is_lift_full=self.is_lift_full(),
             current_floor=self.current_floor,
@@ -113,29 +116,22 @@ class LiftManagerLOOK(LiftManager):
         if next_floor == self.current_floor:
             return next_floor
 
-        # If the lift is moving up and the requested floor is above the current floor
-        if next_floor > self.current_floor and self.current_direction == "up":
-            return next_floor
-
-        # If the lift is moving down and the requested floor is below the current floor
-        elif next_floor < self.current_floor and self.current_direction == "down":
-            return next_floor
-
         # If the lift is moving in the wrong direction the direction is flipped
-        elif self.current_direction == "up":
+        elif next_floor < self.current_floor and self.current_direction == "up":
             self.current_direction = "down"
             return next_floor
 
-        elif self.current_direction == "down":
+        elif next_floor > self.current_floor and self.current_direction == "down":
             self.current_direction = "up"
             return next_floor
 
+        return next_floor
 
 
 
 class LiftManagerMyAlgorithm(LiftManager):
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight, use_priority_queue):
-        super().__init__(capacity, direction, current_floor, floors, ignore_weight, use_priority_queue)
+    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+        super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = MinHeap()
         self.total_time = 0
 

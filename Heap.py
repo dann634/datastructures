@@ -74,26 +74,25 @@ class MinHeap:
         distance = abs(target_floor - current_floor)
         self.insert((distance, request))
 
-
     def dequeue(self, current_floor):
+        if self.size() == 0:
+            return None
 
         distance, next_request = self.remove_min()
         next_floor = next_request.requested_floor
 
-        if next_floor > current_floor:
-            direction = 1
-        else:
-            direction = -1
+        # Move towards the next request's floor
+        direction = 1 if next_floor > current_floor else -1
         while current_floor != next_floor:
             current_floor += direction
 
-        if self.size() > 0:
-            refreshing_requests = []
-            while self.size() > 0:
-                distance, request = self.remove_min()
-                refreshing_requests.append(request)
-            for req_floor in refreshing_requests:
-                updated_dist = abs(req_floor.requested_floor - current_floor)
-                self.insert((updated_dist, req_floor))
+        # Instead of clearing the heap, update the distances directly
+        for i in range(self.size()):
+            distance, request = self.heap[i]
+            updated_distance = abs(request.requested_floor - current_floor)
+            self.heap[i] = (updated_distance, request)
+
+        # Restore heap order efficiently
+        self.heapify_down(0)
 
         return next_floor

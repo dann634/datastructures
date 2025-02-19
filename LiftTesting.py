@@ -9,11 +9,10 @@ from Call import Call
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
 DEFAULT_MAX_PEOPLE = 500
-DEFAULT_PEOPLE_STEP = 5
+DEFAULT_PEOPLE_STEP = 2
 DEFAULT_LIFT_CAPACITY = 12
 DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 30
-DEFAULT_USE_PRIORITY = True
 
 """
 Runs the tests from the text files
@@ -59,7 +58,6 @@ def file_testing(filename : str,
         current_floor=start_floor,
         floors=num_floors,
         ignore_weight=DEFAULT_IGNORE_WEIGHT,
-        use_priority_queue=DEFAULT_USE_PRIORITY
     )
 
     while floor_requests:
@@ -110,7 +108,6 @@ def random_testing(
         number_of_people=DEFAULT_MAX_PEOPLE,
         lift_capacity=DEFAULT_LIFT_CAPACITY,
         ignore_weight=DEFAULT_IGNORE_WEIGHT,
-        use_priority=DEFAULT_USE_PRIORITY
 ):
 
     # Lift Variables
@@ -127,7 +124,6 @@ def random_testing(
         current_floor=0,
         floors=floors,
         ignore_weight=ignore_weight,
-        use_priority_queue=use_priority
     )
 
 
@@ -267,7 +263,7 @@ def scan_vs_look():
         graph_title="SCAN vs LOOK Performance",
         line1_label="SCAN",
         line2_label="LOOK",
-        line3_label = "LLOOK"
+        line3_label = "MyAlgorithm"
     )
 
     print("Test 1: Ran Successfully")
@@ -286,7 +282,6 @@ Capacity: 12
 
 Lift Settings:
 Weight Sensor: ON
-Priority Queue: ON
 """
 def scan_vs_look_prio():
     floors_traversed_scan = []
@@ -296,7 +291,6 @@ def scan_vs_look_prio():
             floors_traversed = random_testing(
                 algorithm=algorithm,
                 number_of_people=people,
-                use_priority=True
             )
 
             if algorithm == Algorithm.SCAN:
@@ -334,12 +328,15 @@ Priority Queue: ON
 def scan_vs_look_weight_sensor():
     floors_traversed_scan = []
     floors_traversed_look = []
+    floors_traversed_myalgorithm = []
     floors_traversed_scan_weight = []
     floors_traversed_look_weight = []
+    floors_traversed_myalgorithm_weight = []
+
     people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
 
     for ignore_weight in [True, False]:
-        for algorithm in [Algorithm.LOOK, Algorithm.SCAN]:
+        for algorithm in [Algorithm.LOOK]:
             for people in people_served:
                 floors_traversed = random_testing(
                     algorithm=algorithm,
@@ -352,20 +349,27 @@ def scan_vs_look_weight_sensor():
                         floors_traversed_scan_weight.append(floors_traversed)
                     elif algorithm == Algorithm.LOOK:
                         floors_traversed_look_weight.append(floors_traversed)
+                    elif algorithm == Algorithm.MYALGORITHM:
+                        floors_traversed_myalgorithm_weight.append(floors_traversed)
                 else:
                     if algorithm == Algorithm.SCAN:
                         floors_traversed_scan.append(floors_traversed)
                     elif algorithm == Algorithm.LOOK:
                         floors_traversed_look.append(floors_traversed)
+                    elif algorithm == Algorithm.MYALGORITHM:
+                        floors_traversed_myalgorithm.append(floors_traversed)
 
     plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_scan, people_served, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
-    plt.scatter(floors_traversed_scan_weight, people_served, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
-    plt.scatter(floors_traversed_look, people_served, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
-    plt.scatter(floors_traversed_look_weight, people_served, color='firebrick', label="LOOK - Sensor", alpha=0.7, marker='s')
+    # plt.scatter(people_served, floors_traversed_scan, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
+    # plt.scatter(people_served, floors_traversed_scan_weight, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
+    plt.scatter(people_served, floors_traversed_look, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
+    plt.scatter(people_served, floors_traversed_look_weight, color='firebrick', label="LOOK - Sensor", alpha=0.7, marker='s')
+    # plt.scatter(people_served, floors_traversed_myalgorithm, color='green', label="MyAlgorithm - Sensor", alpha=0.7, marker='o')
+    # plt.scatter(people_served, floors_traversed_myalgorithm_weight, color='orange', label="MyAlgorithm - Sensor", alpha=0.7, marker='o')
 
-    plt.xlabel("Floors Traversed")
-    plt.ylabel("People Served")
+
+    plt.xlabel("People Served")
+    plt.ylabel("Floors Traversed")
     plt.title("Weight Sensor Performance (SCAN and LOOK)")
     plt.legend()
     plt.grid(True)
@@ -456,7 +460,6 @@ def overload_one_floor():
                 current_floor=0,
                 floors=floors,
                 ignore_weight=DEFAULT_IGNORE_WEIGHT,
-                use_priority_queue=DEFAULT_USE_PRIORITY
             )
 
 
@@ -516,7 +519,7 @@ def run_all_tests():
     scan_vs_look_weight_sensor()
 
 if __name__ == '__main__':
-    scan_vs_look()
-    # scan_vs_look_weight_sensor()
+    # scan_vs_look()
+    scan_vs_look_weight_sensor()
     # capacity_test()
     # overload_one_floor()
