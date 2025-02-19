@@ -8,7 +8,7 @@ from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
-DEFAULT_MAX_PEOPLE = 1000
+DEFAULT_MAX_PEOPLE = 500
 DEFAULT_PEOPLE_STEP = 5
 DEFAULT_LIFT_CAPACITY = 12
 DEFAULT_IGNORE_WEIGHT = False
@@ -120,7 +120,7 @@ def random_testing(
     people = []
     lift_people = []
 
-    lift_manager = LiftManager(
+    lift_manager = LiftManager.get_instance(
         algorithm=algorithm,
         capacity=lift_capacity,
         direction="up",
@@ -219,7 +219,7 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                 while target_floor == lift_manager.current_floor:
                     target_floor = random.randint(0, lift_manager.floors - 1)
 
-                lift_manager.lift_queue.enqueue(Call(target_floor, True))
+                lift_manager.lift_queue.enqueue(Call(target_floor, True), lift_manager.current_floor)
                 lift_people.append(target_floor)
                 lift_manager.add_person()
 
@@ -256,6 +256,8 @@ def scan_vs_look():
                 floors_traversed_look.append(floors_traversed)
             elif algorithm == Algorithm.LLOOK:
                 floors_traversed_llook.append(floors_traversed)
+
+        print("Algorithm run")
 
     generate_graph(
         floors_traversed_1=floors_traversed_scan,

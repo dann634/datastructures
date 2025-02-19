@@ -1,6 +1,9 @@
+from Call import Call
+
+
 class MinHeap:
     def __init__(self):
-        self.heap = []
+        self.heap : [(Call, int)] = []
 
     def size(self):
         return len(self.heap)
@@ -41,13 +44,13 @@ class MinHeap:
 
     def heapify_up(self):
         index = len(self.heap) - 1
-        while (self.hasParent(index) and self.parent(index) > self.heap[index]):
+        while self.hasParent(index) and self.parent(index)[0] > self.heap[index][0]:
             self.swap(self.getParentIndex(index), index)
             index = self.getParentIndex(index)
 
     def remove_min(self):
         if not self.heap:
-            return ("empty heap")
+            return None
         minItem = self.heap[0]
         self.heap[0] = self.heap[len(self.heap) - 1]
         self.heap.pop()
@@ -56,44 +59,41 @@ class MinHeap:
 
     def heapify_down(self, index):
         smallest = index
-        if (self.hasLeftChild(index) and self.heap[smallest] > self.leftChild(index)):
+        if self.hasLeftChild(index) and self.heap[smallest][0] > self.leftChild(index)[0]:
             smallest = self.getLeftChildIndex(index)
-        if (self.hasRightChild(index) and self.heap[smallest] > self.rightChild(index)):
+        if self.hasRightChild(index) and self.heap[smallest][0] > self.rightChild(index)[0]:
             smallest = self.getRightChildIndex(index)
-        if (smallest != index):
+        if smallest != index:
             self.swap(index, smallest)
             self.heapify_down(smallest)
 
-current_floor = 0
-heap = MinHeap()
 
-def enqueue_heap(self, request,):
-    global current_floor
-    global heap
-    distance = abs(request - current_floor)
-    heap.insert((distance, request))
 
-def dequeue_heap():
-    global current_floor
-    global heap
-    distance, next_floor = heap.remove_min()
-    next_floor = int(next_floor)
+    def enqueue(self, request : Call, current_floor=0):
+        target_floor = request.requested_floor
+        distance = abs(target_floor - current_floor)
+        self.insert((distance, request))
 
-    if next_floor > current_floor:
-        direction = 1
-    else:
-        direction = -1
-    while current_floor != next_floor:
-        current_floor += direction
 
-    if heap.size() > 0:
-        refreshing_requests = []
-        while heap.size() > 0:
-            distance, req_floor = heap.remove_min()
-            req_floor = int(req_floor)
-            refreshing_requests.append(req_floor)
-        for req_floor in refreshing_requests:
-            updated_dist = abs(req_floor - current_floor)
-            heap.insert((updated_dist, req_floor))
+    def dequeue(self, current_floor):
 
-    return next_floor
+        distance, next_request = self.remove_min()
+        next_floor = next_request.requested_floor
+
+        if next_floor > current_floor:
+            direction = 1
+        else:
+            direction = -1
+        while current_floor != next_floor:
+            current_floor += direction
+
+        if self.size() > 0:
+            refreshing_requests = []
+            while self.size() > 0:
+                distance, request = self.remove_min()
+                refreshing_requests.append(request)
+            for req_floor in refreshing_requests:
+                updated_dist = abs(req_floor.requested_floor - current_floor)
+                self.insert((updated_dist, req_floor))
+
+        return next_floor

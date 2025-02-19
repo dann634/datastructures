@@ -4,7 +4,7 @@ class LiftQueue:
     def __init__(self):
         self.calls: [Call] = []
 
-    def enqueue(self, call: Call):
+    def enqueue(self, call: Call, _=0):
         self.calls.append(call)
 
     def dequeue(self, ignore_weight, is_lift_full) -> Call:
