@@ -23,9 +23,9 @@ class LiftManager:
         if self.algorithm == Algorithm.SCAN:
             return self.__scan()
         elif self.algorithm == Algorithm.LOOK:
-            return self.__look()
+            return self.__my_algorithm()
         elif self.algorithm == Algorithm.LLOOK:
-            return self.__llook()
+            return self.__look()
 
     def __scan(self):
 
@@ -53,7 +53,7 @@ class LiftManager:
 
         return next_requested_floor
 
-    def __llook(self):
+    def __look(self):
         next_request = self.lift_queue.dequeue_look(
             ignore_weight=self.ignore_weight,
             is_lift_full=self.is_lift_full(),
@@ -88,25 +88,8 @@ class LiftManager:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def __look(self):
-        next_request = self.lift_queue.dequeue(self.ignore_weight,
-                                               self.is_lift_full())  # Gets the next request from the queue
+    def __my_algorithm(self):
+        next_request = self.lift_queue.dequeue(self.ignore_weight, self.is_lift_full())  # Gets the next request from the queue
 
         if next_request is None:
             return self.current_floor
