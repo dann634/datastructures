@@ -16,23 +16,23 @@ class LiftManager:
 
         self.algorithm = algorithm
 
-        #SCAN ONLY
+        # SCAN ONLY
         self.reached_limit = False
-
-
 
     def process_next_request(self):
         if self.algorithm == Algorithm.SCAN:
             return self.__scan()
         elif self.algorithm == Algorithm.LOOK:
             return self.__look()
-
+        elif self.algorithm == Algorithm.LLOOK:
+            return self.__llook()
 
     def __scan(self):
 
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
 
-        next_request : Call = self.lift_queue.dequeue(self.ignore_weight,self.is_lift_full())  # Gets the next request from the queue
+        next_request: Call = self.lift_queue.dequeue(self.ignore_weight,
+                                                     self.is_lift_full())  # Gets the next request from the queue
 
         if next_request is None:
             return self.current_floor
@@ -44,18 +44,94 @@ class LiftManager:
             return next_requested_floor
 
         if self.current_direction == "up" and next_requested_floor < self.current_floor:
-                self.current_direction = "down"
-                self.reached_limit = True
+            self.current_direction = "down"
+            self.reached_limit = True
 
         elif self.current_direction == "down" and next_requested_floor > self.current_floor:
-                self.current_direction = "up"
-                self.reached_limit = True
+            self.current_direction = "up"
+            self.reached_limit = True
 
         return next_requested_floor
 
+    def __llook(self):
+        next_floor = None
+        current_best_request = None
+
+        if self.current_direction == "up":
+            if not self.ignore_weight and self.is_lift_full():
+                for index in range(self.lift_queue.size()):
+                    request = self.lift_queue.peek_index(index)
+                    distance_to_request = request.requested_floor - self.current_floor
+                    if distance_to_request >= 0 and request.isInternal:
+
+
+
+
+
+
+
+
+
+
+
+
+        if self.current_direction == "up":
+            if not self.ignore_weight and self.is_lift_full():
+                for index in range(self.lift_queue.size()):
+                    request = self.lift_queue.peek_index(index)
+                    if request.requested_floor >= self.current_floor and request.isInternal:
+                        next_floor = self.lift_queue.dequeue_index(index)
+                        break
+
+            else:
+                for index in range(self.lift_queue.size()):
+                    request = self.lift_queue.peek_index(index)
+                    if request.requested_floor >= self.current_floor:
+                        if temp_next_request.requested_floor >= request.requested_floor:
+                            temp_next_request = request
+
+        if self.current_direction == "down":
+            if not self.ignore_weight and self.is_lift_full():
+                for index in range(self.lift_queue.size()):
+                    request = self.lift_queue.peek_index(index)
+                    if request.requested_floor <= self.current_floor and request.isInternal:
+                        next_floor = self.lift_queue.dequeue_index(index)
+                        break
+
+            else:
+                for index in range(self.lift_queue.size()):
+                    request = self.lift_queue.peek_index(index)
+                    if request.requested_floor <= self.current_floor:
+                        next_floor = self.lift_queue.dequeue_index(index)
+                        break
+
+        if next_floor is None:
+            self.current_direction = "down" if self.current_direction == "up" else "up"
+            next_floor = self.__llook()
+
+        return next_floor.requested_floor
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def __look(self):
-        next_request = self.lift_queue.dequeue(self.ignore_weight,self.is_lift_full())  # Gets the next request from the queue
+        next_request = self.lift_queue.dequeue(self.ignore_weight,
+                                               self.is_lift_full())  # Gets the next request from the queue
 
         if next_request is None:
             return self.current_floor
