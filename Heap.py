@@ -64,16 +64,18 @@ class MinHeap:
             self.swap(index, smallest)
             self.heapify_down(smallest)
 
+current_floor = 0
+heap = MinHeap()
+
+def enqueue_heap(self, request,):
+    global current_floor
+    global heap
+    distance = abs(request - current_floor)
+    heap.insert((distance, request))
+
 def dequeue_heap():
-    heap = MinHeap()
-    direction = 1
-    current_floor = 0
-    requests = []
-
-    for requestFloor in requests:
-        distance = abs(requestFloor - current_floor)
-        heap.insert((distance, requestFloor))
-
+    global current_floor
+    global heap
     distance, next_floor = heap.remove_min()
     next_floor = int(next_floor)
 
