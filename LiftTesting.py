@@ -8,7 +8,7 @@ from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
-DEFAULT_MAX_PEOPLE = 1000
+DEFAULT_MAX_PEOPLE = 2000
 DEFAULT_PEOPLE_STEP = 5
 DEFAULT_LIFT_CAPACITY = 12
 DEFAULT_IGNORE_WEIGHT = False
@@ -84,7 +84,7 @@ def file_testing(filename : str,
         next_floor = lift_manager.process_next_request()
         lift_manager.current_floor = next_floor
 
-        if algorithm == Algorithm.SCAN and lift_manager.reached_limit:
+        if algorithm == Algorithm.MYALGORITHM and lift_manager.reached_limit:
             if lift_manager.current_direction == "up":
                 floors_traversed = (start_floor - min_floor) + (lift_manager.current_floor - min_floor)
             elif lift_manager.current_direction == "down":
@@ -242,30 +242,25 @@ Priority Queue: OFF
 def scan_vs_look():
     floors_traversed_scan = []
     floors_traversed_look = []
-    floors_traversed_llook = []
-    for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.LLOOK]:
+    for algorithm in [Algorithm.MYALGORITHM, Algorithm.LOOK]:
         for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
             floors_traversed = random_testing(
                 algorithm=algorithm,
                 number_of_people=people,
             )
 
-            if algorithm == Algorithm.SCAN:
+            if algorithm == Algorithm.MYALGORITHM:
                 floors_traversed_scan.append(floors_traversed)
             elif algorithm == Algorithm.LOOK:
                 floors_traversed_look.append(floors_traversed)
-            elif algorithm == Algorithm.LLOOK:
-                floors_traversed_llook.append(floors_traversed)
 
     generate_graph(
         floors_traversed_1=floors_traversed_scan,
         people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
         floors_traversed_2=floors_traversed_look,
-        floors_traversed_3=floors_traversed_llook,
         graph_title="SCAN vs LOOK Performance",
         line1_label="SCAN",
         line2_label="LOOK",
-        line3_label = "LLOOK"
     )
 
     print("Test 1: Ran Successfully")
@@ -485,17 +480,15 @@ Plots floors traversed against the amount of people being served
 def generate_graph(
         floors_traversed_1 : [int],
         floors_traversed_2 : [int],
-        floors_traversed_3 : [int],
         people_served : [int],
         graph_title : str,
         line1_label : str,
         line2_label : str,
-        line3_label : str,
+
 ):
     plt.figure(figsize=(8, 6))
     plt.scatter(people_served, floors_traversed_1, color='blue', label=line1_label, alpha=0.7, marker='o')
     plt.scatter(people_served, floors_traversed_2, color='red', label=line2_label, alpha=0.7, marker='o')
-    plt.scatter(people_served, floors_traversed_3, color='darkblue', label=line3_label, alpha=0.7, marker='o')
 
 
     plt.xlabel("People Served")
