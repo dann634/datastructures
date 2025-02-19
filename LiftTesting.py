@@ -3,7 +3,7 @@ import random
 from matplotlib import pyplot as plt
 
 from AlgorithmEnum import Algorithm
-from LiftManager import LiftManager, LiftManagerMyAlgorithm
+from LiftManager import LiftManager
 from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
@@ -143,7 +143,6 @@ def random_testing(
 """
 The main loop for running the lift algorithm
 """
-algorithm_time = 0
 def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int]) -> int:
 
     total_floors_travelled = 0
@@ -224,9 +223,6 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                 lift_people.append(target_floor)
                 lift_manager.add_person()
 
-    global algorithm_time
-    algorithm_time += lift_manager.total_time
-    print(algorithm_time)
     return total_floors_travelled
 
 

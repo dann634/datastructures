@@ -25,27 +25,56 @@ class LiftQueue:
         return None
 
     def dequeue_look(self, ignore_weight, is_lift_full, current_floor, direction) -> Call:
+        if not self.calls:
+            return None
+
         if not ignore_weight and is_lift_full:
-            # Serve only internal calls
+            if direction == "up":
+                requests_in_direction = [call for call in self.calls if call.requested_floor >= current_floor and call.isInternal]
+            elif direction == "down":
+                requests_in_direction = [call for call in self.calls if call.requested_floor <= current_floor and call.isInternal]
 
-            call_found = None
-            for call in self.calls:
-                if call.isInternal:
-                    call_found = call
-                    if current_floor < call.requested_floor and direction == "up":
-                        break
-                    elif current_floor < call.requested_floor and direction == "down":
-                        break
-            if call_found:
-                self.calls.remove(call_found)
-                return call_found
+        else:
+            if direction == "up":
+                requests_in_direction = [call for call in self.calls if call.requested_floor >= current_floor]
+            elif direction == "down":
+                requests_in_direction = [call for call in self.calls if call.requested_floor <= current_floor]
 
-        if len(self.calls) > 0:
-            return self.calls.pop(0)
+        min_distance = float('inf')
+        closest_request = None
+        for call in requests_in_direction:
+            distance = abs(call.requested_floor - current_floor)
+            if distance < min_distance:
+                min_distance = distance
+                closest_request = call
 
-        return None
+        if closest_request:
+            self.calls.remove(closest_request)
+            return closest_request
+        else:
+            direction = "down" if direction == "up" else "up"
+            return self.dequeue_look(ignore_weight, is_lift_full, current_floor, direction)
 
+    def dequeue_sstf(self, ignore_weight, is_lift_full, current_floor) -> Call:
+        print("RUNNING")
+        if not self.calls:
+            return None
 
+        if not ignore_weight and is_lift_full:
+            requests = [call for call in self.calls if call.isInternal]
+        else:
+            requests = self.calls
+
+        min_distance = float('inf')
+        closest_request = None
+        for call in requests:
+            distance = abs(call.requested_floor - current_floor)
+            if distance < min_distance:
+                min_distance = distance
+                closest_request = call
+
+        self.calls.remove(closest_request)
+        return closest_request
 
 
     def peek(self):
