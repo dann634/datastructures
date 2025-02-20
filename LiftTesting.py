@@ -8,9 +8,9 @@ from Call import Call
 
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
-DEFAULT_MAX_PEOPLE = 100
-DEFAULT_PEOPLE_STEP = 1
-DEFAULT_LIFT_CAPACITY = 1
+DEFAULT_MAX_PEOPLE = 1000
+DEFAULT_PEOPLE_STEP = 2
+DEFAULT_LIFT_CAPACITY = 12
 DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 30
 
@@ -51,7 +51,7 @@ def file_testing(filename : str,
                 floor_requests[floor] = requests
 
     people_served = 0
-    lift_manager = LiftManager(
+    lift_manager = LiftManager.get_instance(
         algorithm=algorithm,
         capacity=lift_capacity,
         direction=start_direction,
@@ -59,6 +59,8 @@ def file_testing(filename : str,
         floors=num_floors,
         ignore_weight=DEFAULT_IGNORE_WEIGHT,
     )
+
+
 
     while floor_requests:
         people_served = people_served + 1
@@ -224,43 +226,52 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
 
 """
 TEST 1:
-SCAN vs LOOK (Queue)
+SCAN vs LOOK vs MyAlgorithm
 
 Testing Values:
-People: 2000
+People: 1000
 Floors: 30
 Capacity: 12
 
 Lift Settings:
 Weight Sensor: ON
-Priority Queue: OFF
 """
-def scan_vs_look():
+def scan_vs_look_myalgorithm():
+
+    #Lists to store results of each algorithm output
     floors_traversed_scan = []
     floors_traversed_look = []
     floors_traversed_myalgorithm = []
+
+    #Create list from the default values
+    people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
+
+    #Loops through, using each algorithm, changing the number of people each time
     for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
-        for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
+        for people in people_served:
+
+            #Call the random testing method to get floors traversed
             floors_traversed = random_testing(
                 algorithm=algorithm,
                 number_of_people=people,
             )
 
-            if algorithm == Algorithm.SCAN:
-                floors_traversed_scan.append(floors_traversed)
-            elif algorithm == Algorithm.LOOK:
-                floors_traversed_look.append(floors_traversed)
-            elif algorithm == Algorithm.MYALGORITHM:
-                floors_traversed_myalgorithm.append(floors_traversed)
+            #Add output to matching list
+            match algorithm:
+                case Algorithm.SCAN:
+                    floors_traversed_scan.append(floors_traversed)
+                case Algorithm.LOOK:
+                    floors_traversed_look.append(floors_traversed)
+                case Algorithm.MYALGORITHM:
+                    floors_traversed_myalgorithm.append(floors_traversed)
 
-        print("Algorithm run")
-
+    #Generate the graph from the data
     generate_graph(
+        people_served=people_served,
+        graph_title="SCAN vs LOOK vs MyAlgorithm Performance",
         floors_traversed_1=floors_traversed_scan,
-        people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
         floors_traversed_2=floors_traversed_look,
         floors_traversed_3=floors_traversed_myalgorithm,
-        graph_title="SCAN vs LOOK Performance",
         line1_label="SCAN",
         line2_label="LOOK",
         line3_label = "MyAlgorithm"
@@ -270,49 +281,8 @@ def scan_vs_look():
 
 
 
-
 """
 TEST 2
-SCAN vs LOOK (Priority Queue)
-
-Testing Values:
-People: 2000
-Floors: 30
-Capacity: 12
-
-Lift Settings:
-Weight Sensor: ON
-"""
-def scan_vs_look_prio():
-    floors_traversed_scan = []
-    floors_traversed_look = []
-    for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
-        for people in range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP):
-            floors_traversed = random_testing(
-                algorithm=algorithm,
-                number_of_people=people,
-            )
-
-            if algorithm == Algorithm.SCAN:
-                floors_traversed_scan.append(floors_traversed)
-            elif algorithm == Algorithm.LOOK:
-                floors_traversed_look.append(floors_traversed)
-
-    generate_graph(
-        floors_traversed_1=floors_traversed_scan,
-        people_served=range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP),
-        floors_traversed_2=floors_traversed_look,
-        graph_title="SCAN vs LOOK Priority Queue Performance",
-        line1_label="SCAN",
-        line2_label="LOOK",
-    )
-
-    print("Test 2: Ran Successfully")
-
-
-
-"""
-TEST 3
 Testing how a weight sensor affects the efficiency of a lift
 (When the lift is full only serve internal calls)
 
@@ -323,63 +293,65 @@ Floors: 30
 
 Lift Settings:
 Weight Sensor: (ON/OFF)
-Priority Queue: ON
 """
-def scan_vs_look_weight_sensor():
+def algorithm_weight_sensor_test():
+
+    #Lists to store results of each algorithm output
     floors_traversed_scan = []
     floors_traversed_look = []
-    floors_traversed_myalgorithm = []
     floors_traversed_scan_weight = []
     floors_traversed_look_weight = []
-    floors_traversed_myalgorithm_weight = []
 
+    # Create list from the default values
     people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
 
+    # Loops through, using each algorithm, running with the weight sensor on and off, changing the number of people each time
     for ignore_weight in [True, False]:
-        for algorithm in [Algorithm.LOOK]:
+        for algorithm in [Algorithm.LOOK, Algorithm.SCAN]:
             for people in people_served:
+
+                # Get floors traversed from output
                 floors_traversed = random_testing(
                     algorithm=algorithm,
                     number_of_people=people,
                     ignore_weight=ignore_weight,
                 )
 
+
+                # Add output to matching list
                 if not ignore_weight:
                     if algorithm == Algorithm.SCAN:
                         floors_traversed_scan_weight.append(floors_traversed)
                     elif algorithm == Algorithm.LOOK:
                         floors_traversed_look_weight.append(floors_traversed)
-                    elif algorithm == Algorithm.MYALGORITHM:
-                        floors_traversed_myalgorithm_weight.append(floors_traversed)
+
                 else:
                     if algorithm == Algorithm.SCAN:
                         floors_traversed_scan.append(floors_traversed)
                     elif algorithm == Algorithm.LOOK:
                         floors_traversed_look.append(floors_traversed)
-                    elif algorithm == Algorithm.MYALGORITHM:
-                        floors_traversed_myalgorithm.append(floors_traversed)
 
+
+    #Generate graph
     plt.figure(figsize=(8, 6))
-    # plt.scatter(people_served, floors_traversed_scan, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
-    # plt.scatter(people_served, floors_traversed_scan_weight, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
+    plt.scatter(people_served, floors_traversed_scan, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
+    plt.scatter(people_served, floors_traversed_scan_weight, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
     plt.scatter(people_served, floors_traversed_look, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
     plt.scatter(people_served, floors_traversed_look_weight, color='firebrick', label="LOOK - Sensor", alpha=0.7, marker='s')
-    # plt.scatter(people_served, floors_traversed_myalgorithm, color='green', label="MyAlgorithm - Sensor", alpha=0.7, marker='o')
-    # plt.scatter(people_served, floors_traversed_myalgorithm_weight, color='orange', label="MyAlgorithm - Sensor", alpha=0.7, marker='o')
 
-
+    #Add details to the graph
     plt.xlabel("People Served")
     plt.ylabel("Floors Traversed")
-    plt.title("Weight Sensor Performance (SCAN and LOOK)")
+    plt.title("Weight Sensor Performance (SCAN, LOOK, MyAlgorithm)")
     plt.legend()
     plt.grid(True)
     plt.show()
 
-    print("Test 3: Ran Successfully")
+    print("Test 2: Ran Successfully")
 
 
 """
-TEST 4
+TEST 3
 Changes in capacity (SCAN vs LOOK)
 
 Testing Values:
@@ -392,30 +364,75 @@ Settings:
 - Weight Sensor: ON
 """
 def capacity_test():
+
+    # Lists to store output of algorithms
     floors_traversed_scan = []
     floors_traversed_look = []
+    floors_traversed_myalgorithm = []
     graph_y = []
+
+    #The list of capacity values the test uses
     capacity_list = range(1, 500, 1)
+
     for _ in range(1): #All tests repeat 3 times
-        for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
+        for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
             for capacity in capacity_list:
                 floors_traversed = random_testing(
                     algorithm=algorithm,
                     lift_capacity=capacity,
-                    number_of_people=500,
+                    number_of_people=800,
                 )
 
-
+                # Add output to matching list
                 if algorithm == Algorithm.SCAN:
                     floors_traversed_scan.append(floors_traversed)
                     graph_y.append(capacity)
                 elif algorithm == Algorithm.LOOK:
                     floors_traversed_look.append(floors_traversed)
+                elif algorithm == Algorithm.MYALGORITHM:
+                    floors_traversed_myalgorithm.append(floors_traversed)
 
+            print("Algorithm Ran Successfully")
+
+
+    #Print out each graph separately first
+    plt.figure(figsize=(8, 6))
+    plt.scatter(floors_traversed_scan, graph_y, color='blue', label="SCAN", alpha=0.7, marker='o')
+    plt.xlim(0, 4000)
+    plt.xlabel("Floors Traversed")
+    plt.ylabel("Capacity")
+    plt.title("How changing lift capacity impacts performance")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(floors_traversed_look, graph_y, color='red', label="LOOK", alpha=0.7, marker='s')
+    plt.xlim(0, 4000)
+    plt.xlabel("Floors Traversed")
+    plt.ylabel("Capacity")
+    plt.title("How changing lift capacity impacts performance")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(floors_traversed_myalgorithm, graph_y, color='darkblue', label="MyAlgorithm", alpha=0.7, marker='s')
+    plt.xlim(0, 4000)
+    plt.xlabel("Floors Traversed")
+    plt.ylabel("Capacity")
+    plt.title("How changing lift capacity impacts performance")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    #Add all the data to one graph
     plt.figure(figsize=(8, 6))
     plt.scatter(floors_traversed_scan, graph_y, color='blue', label="SCAN", alpha=0.7, marker='o')
     plt.scatter(floors_traversed_look, graph_y, color='red', label="LOOK", alpha=0.7, marker='s')
+    plt.scatter(floors_traversed_myalgorithm, graph_y, color='darkblue', label="MyAlgorithm", alpha=0.7, marker='s')
 
+    plt.xlim(0, 4000)
     plt.xlabel("Floors Traversed")
     plt.ylabel("Capacity")
     plt.title("How changing lift capacity impacts performance")
@@ -425,7 +442,7 @@ def capacity_test():
 
 
 """
-TEST 5
+TEST 4
 All requests coming from one floor (SCAN vs LOOK)
 
 Testing Values:
@@ -435,7 +452,6 @@ Capacity: 12
 
 Lift Settings:
 - Weight Sensor: ON
-- Priority Queue: ON
 """
 def overload_one_floor():
 
@@ -453,7 +469,7 @@ def overload_one_floor():
             people = [chosen_floor] * people
             lift_people: [int] = []
 
-            lift_manager = LiftManager(
+            lift_manager = LiftManager.get_instance(
                 algorithm=algorithm,
                 capacity=DEFAULT_LIFT_CAPACITY,
                 direction="up",
@@ -461,6 +477,8 @@ def overload_one_floor():
                 floors=floors,
                 ignore_weight=DEFAULT_IGNORE_WEIGHT,
             )
+
+
 
 
             floors_travelled = run_algorithm(lift_manager, people, lift_people)
@@ -488,11 +506,11 @@ Generates the graphs from the data provided
 Plots floors traversed against the amount of people being served
 """
 def generate_graph(
+        people_served: [int],
+        graph_title: str,
         floors_traversed_1 : [int],
         floors_traversed_2 : [int],
         floors_traversed_3 : [int],
-        people_served : [int],
-        graph_title : str,
         line1_label : str,
         line2_label : str,
         line3_label : str,
@@ -514,12 +532,13 @@ def generate_graph(
 Executes all tests sequentially
 """
 def run_all_tests():
-    scan_vs_look()
-    scan_vs_look_prio()
-    scan_vs_look_weight_sensor()
+    scan_vs_look_myalgorithm()
+    algorithm_weight_sensor_test()
 
 if __name__ == '__main__':
-    scan_vs_look()
-    #scan_vs_look_weight_sensor()
-    # capacity_test()
+    #run_all_tests()
+    # scan_vs_look_myalgorithm()
+
+    # algorithm_weight_sensor_test()
+    capacity_test()
     # overload_one_floor()

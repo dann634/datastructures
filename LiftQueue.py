@@ -36,9 +36,9 @@ class LiftQueue:
             self.calls.remove(closest_request)
             return closest_request
         else:
-            return self.calls.pop(0)
-            # direction = "down" if direction == "up" else "up"
-            # return self.dequeue(ignore_weight, is_lift_full, current_floor, direction)
+            # return self.calls.pop(0)
+            direction = "down" if direction == "up" else "up"
+            return self.dequeue(ignore_weight, is_lift_full, current_floor, direction)
 
 
 
