@@ -1,8 +1,12 @@
 import time
+from re import match
 
+from Call import Call
 from Heap import MinHeap
 from LiftQueue import LiftQueue
 from AlgorithmEnum import Algorithm
+
+
 
 
 class LiftManager:
@@ -55,11 +59,13 @@ class LiftManager:
         self.passenger_count -= 1
 
 
+
 class LiftManagerSCAN(LiftManager):
 
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
+
 
     def process_next_request(self):
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
@@ -71,27 +77,25 @@ class LiftManagerSCAN(LiftManager):
             direction=self.current_direction,
         )  # Gets the next request from the queue
 
-        # Checks if the next request is None in order to avoid an error.
         if next_request is None:
             return self.current_floor
 
         next_requested_floor = next_request.requested_floor
 
-        # Checks if the lift is already at the current floor.
+        # If the lift is already at the requested floor or no request exists
         if next_requested_floor == self.current_floor:
             return next_requested_floor
 
-        # Checks if the next floor given by the queue is below the current floor.
         if self.current_direction == "up" and next_requested_floor < self.current_floor:
-            self.current_direction = "down" # Changes the direction to be down.
-            self.reached_limit = True # This means the lift went all the way to the top of the building to turn around.
+            self.current_direction = "down"
+            self.reached_limit = True
 
-        # Checks if the next floor given by the queue is above the current floor
         elif self.current_direction == "down" and next_requested_floor > self.current_floor:
-            self.current_direction = "up" # Changes the direction to be up.
-            self.reached_limit = True # This means the lift went all the way to the bottom of the building to turn around.
+            self.current_direction = "up"
+            self.reached_limit = True
 
-        return next_requested_floor # Returns the next floor to be served.
+        return next_requested_floor
+
 
 
 class LiftManagerLOOK(LiftManager):
@@ -99,6 +103,8 @@ class LiftManagerLOOK(LiftManager):
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
+
+
 
     def process_next_request(self):
         next_request = self.lift_queue.dequeue(
@@ -108,27 +114,25 @@ class LiftManagerLOOK(LiftManager):
             direction=self.current_direction,
         )  # Gets the next request from the queue
 
-        # Checks if the next request is None in order to avoid an error.
         if next_request is None:
             return self.current_floor
 
         next_floor = next_request.requested_floor
 
-        # Checks if the lift is already at the current floor.
         if next_floor == self.current_floor:
             return next_floor
 
-        # If the lift is moving in the wrong direction the direction is flipped.
+        # If the lift is moving in the wrong direction the direction is flipped
         elif next_floor < self.current_floor and self.current_direction == "up":
             self.current_direction = "down"
-            return next_floor # Returns the next floor to be served.
+            return next_floor
 
-        # If the lift is moving in the wrong direction the direction is flipped.
         elif next_floor > self.current_floor and self.current_direction == "down":
             self.current_direction = "up"
-            return next_floor # Returns the next floor to be served.
+            return next_floor
 
-        return next_floor # Returns the next floor to be served.
+        return next_floor
+
 
 
 class LiftManagerMyAlgorithm(LiftManager):
@@ -136,6 +140,7 @@ class LiftManagerMyAlgorithm(LiftManager):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = MinHeap()
         self.total_time = 0
+
 
     def process_next_request(self):
         next_floor = self.lift_queue.dequeue(self.current_floor)  # Gets the next request from the queue
@@ -159,3 +164,4 @@ class LiftManagerMyAlgorithm(LiftManager):
             return next_floor  # Returns the next floor to be served.
 
         return next_floor  # Returns the next floor to be served.
+

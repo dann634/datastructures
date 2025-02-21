@@ -9,7 +9,7 @@ from Call import Call
 #STANDARD CONSTANTS FOR TESTING
 DEFAULT_MIN_PEOPLE = 5
 DEFAULT_MAX_PEOPLE = 1000
-DEFAULT_PEOPLE_STEP = 2
+DEFAULT_PEOPLE_STEP = 5
 DEFAULT_LIFT_CAPACITY = 12
 DEFAULT_IGNORE_WEIGHT = False
 DEFAULT_FLOORS = 30
@@ -372,7 +372,7 @@ def capacity_test():
     graph_y = []
 
     #The list of capacity values the test uses
-    capacity_list = range(1, 500, 1)
+    capacity_list = range(1, 300, 1)
 
     for _ in range(1): #All tests repeat 3 times
         for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
@@ -380,7 +380,7 @@ def capacity_test():
                 floors_traversed = random_testing(
                     algorithm=algorithm,
                     lift_capacity=capacity,
-                    number_of_people=800,
+                    number_of_people=300,
                 )
 
                 # Add output to matching list
@@ -395,36 +395,22 @@ def capacity_test():
             print("Algorithm Ran Successfully")
 
 
-    #Print out each graph separately first
-    plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_scan, graph_y, color='blue', label="SCAN", alpha=0.7, marker='o')
-    plt.xlim(0, 4000)
-    plt.xlabel("Floors Traversed")
-    plt.ylabel("Capacity")
-    plt.title("How changing lift capacity impacts performance")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    def print_single_graph(x_values : [int], y_values : [int], label : str, color: str):
+        # Print out each graph separately first
+        plt.figure(figsize=(8, 6))
+        plt.scatter(x_values, y_values, color=color, label=label, alpha=0.7, marker='o')
+        plt.xlim(0, 4000)
+        plt.xlabel("Floors Traversed")
+        plt.ylabel("Capacity")
+        plt.title("How changing lift capacity impacts performance")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
-    plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_look, graph_y, color='red', label="LOOK", alpha=0.7, marker='s')
-    plt.xlim(0, 4000)
-    plt.xlabel("Floors Traversed")
-    plt.ylabel("Capacity")
-    plt.title("How changing lift capacity impacts performance")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    print_single_graph(floors_traversed_look, graph_y, "LOOK", "red")
+    print_single_graph(floors_traversed_scan, graph_y, "SCAN", "blue")
+    print_single_graph(floors_traversed_myalgorithm, graph_y, "MyAlgorithm", "darkblue")
 
-    plt.figure(figsize=(8, 6))
-    plt.scatter(floors_traversed_myalgorithm, graph_y, color='darkblue', label="MyAlgorithm", alpha=0.7, marker='s')
-    plt.xlim(0, 4000)
-    plt.xlabel("Floors Traversed")
-    plt.ylabel("Capacity")
-    plt.title("How changing lift capacity impacts performance")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
 
     #Add all the data to one graph
     plt.figure(figsize=(8, 6))
@@ -443,10 +429,10 @@ def capacity_test():
 
 """
 TEST 4
-All requests coming from one floor (SCAN vs LOOK)
+All requests coming from a few floors (SCAN vs LOOK)
 
 Testing Values:
-People: 2000
+People: 1000
 Floors: 30
 Capacity: 12
 
@@ -459,14 +445,26 @@ def overload_one_floor():
 
     floors_traversed_scan = []
     floors_traversed_look = []
+    floors_traversed_myalgorithm = []
+    number_of_random_floors = 2
+
     people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
-    for algorithm in [Algorithm.SCAN, Algorithm.LOOK]:
+    for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
         for people in people_served:
+            random_floors = []
 
-            # Choose a random floor to overload
-            chosen_floor = random.randint(0, floors - 1)
+            # Choose random floors
+            while len(random_floors) < number_of_random_floors:
+                # Choose a random floor to overload
+                chosen_floor = random.randint(0, floors)
+                while chosen_floor in random_floors:
+                    chosen_floor = random.randint(0, floors)
+                random_floors.append(chosen_floor)
 
-            people = [chosen_floor] * people
+            people_list = []
+            for _ in range(people):
+                people_list.append(random.choice(random_floors))
+
             lift_people: [int] = []
 
             lift_manager = LiftManager.get_instance(
@@ -478,27 +476,38 @@ def overload_one_floor():
                 ignore_weight=DEFAULT_IGNORE_WEIGHT,
             )
 
-
-
-
-            floors_travelled = run_algorithm(lift_manager, people, lift_people)
+            floors_travelled = run_algorithm(lift_manager, people_list, lift_people)
 
 
             if algorithm == Algorithm.SCAN:
                 floors_traversed_scan.append(floors_travelled)
             elif algorithm == Algorithm.LOOK:
                 floors_traversed_look.append(floors_travelled)
+            elif algorithm == Algorithm.MYALGORITHM:
+                floors_traversed_myalgorithm.append(floors_travelled)
 
     generate_graph(
-        floors_traversed_1=floors_traversed_scan,
         people_served=people_served,
-        floors_traversed_2=floors_traversed_look,
         graph_title="SCAN vs Look when one floor has lots of requests",
+        floors_traversed_1=floors_traversed_scan,
+        floors_traversed_2=floors_traversed_look,
+        floors_traversed_3=floors_traversed_myalgorithm,
         line1_label="SCAN",
         line2_label="LOOK",
+        line3_label="MyAlgorithm",
     )
 
     print("Test 5: Ran Successfully")
+
+
+"""
+How many people in the lift at once
+"""
+def lift_occupancy_test():
+    pass
+
+
+
 
 
 """
@@ -536,9 +545,9 @@ def run_all_tests():
     algorithm_weight_sensor_test()
 
 if __name__ == '__main__':
-    #run_all_tests()
+    # run_all_tests()
     # scan_vs_look_myalgorithm()
 
     # algorithm_weight_sensor_test()
-    capacity_test()
-    # overload_one_floor()
+    # capacity_test()
+    overload_one_floor()
