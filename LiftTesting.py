@@ -69,7 +69,7 @@ def file_testing(filename : str,
         lift_manager.lift_queue.enqueue(Call(external_floor_request, False))
 
         internal_floor_request = floor_requests[external_floor_request][0]
-        lift_manager.lift_queue.enqueue(Call(internal_floor_request, True))
+        lift_manager.lift_queue.enqueue(Call(internal_floor_request, True), lift_manager.current_floor)
 
         floor_requests[external_floor_request].pop(0)
 
@@ -271,7 +271,7 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                     while target_floor == lift_manager.current_floor:
                         target_floor = random.randint(0, lift_manager.floors - 1)
 
-                    lift_manager.lift_queue.enqueue(Call(target_floor, True))
+                    lift_manager.lift_queue.enqueue(Call(target_floor, True), lift_manager.current_floor)
                     lift_people.append(target_floor)
                     lift_manager.add_person()
 
@@ -883,3 +883,4 @@ def run_all_tests():
 
 if __name__ == '__main__':
     run_all_tests()
+    # scan_vs_look_myalgorithm()

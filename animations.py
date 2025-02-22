@@ -185,7 +185,6 @@ def start_animation():
 
         clock.tick(120)
 
-        lift_queue.print_calls()
 
 
         for n, floor in enumerate(floor_people):
@@ -213,7 +212,7 @@ def start_animation():
         if current_time - last_floor_change_time >= lift_wait_delay:
             # Choose a random floor for the lift to move to
 
-            if not lift_queue.isEmpty() and dequeue_flag:
+            if not lift_queue.size() == 0 and dequeue_flag:
                 current_direction, next_floor = look(lift_data)
 
                 lift.hasMovedPeople = False
