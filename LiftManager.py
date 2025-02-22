@@ -1,14 +1,13 @@
-import time
-from re import match
+from abc import abstractmethod
 
-from Call import Call
+from AlgorithmEnum import Algorithm
 from Heap import MinHeap
 from LiftQueue import LiftQueue
-from AlgorithmEnum import Algorithm
 
-
-
-
+"""
+Parent Class of all Algorithm Implementations
+Inheritance reduces variables being created individually 
+"""
 class LiftManager:
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         self.capacity = capacity
@@ -21,6 +20,17 @@ class LiftManager:
         self.lift_queue = None
         self.total_time = 0
 
+    """
+    Gets the correct child class for the algorithm
+    
+    Args:
+        algorithm (Algorithm): Algorithm to use
+        capacity (int): capacity of the lift
+        direction (str): direction of the lift
+        current_floor (int): current floor of the lift
+        floors (int): the number of floors in the building
+        ignore_weight (bool): flag to ignore whether the lift is full or not
+    """
     @staticmethod
     def get_instance(algorithm: Algorithm,
                      capacity : int,
@@ -43,6 +53,7 @@ class LiftManager:
 
         return algorithm_obj # Returns the next floor decided by the algorithm
 
+    @abstractmethod
     def process_next_request(self):
         pass
 
@@ -59,14 +70,23 @@ class LiftManager:
         self.passenger_count -= 1
 
 
+"""
+LiftManager that implements the SCAN algorithm
 
+Has reached_limit to track whether the lift has reached the end of the lift shaft
+"""
 class LiftManagerSCAN(LiftManager):
 
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
-
+    """
+    Dequeues a request and updates the lift variables
+    
+    Returns:
+        next_requested_floor (int): the next floor the lift will go to
+    """
     def process_next_request(self):
         self.reached_limit = False  # Boolean to determine whether the lift has gone to the top or bottom of the building
 
@@ -97,15 +117,21 @@ class LiftManagerSCAN(LiftManager):
         return next_requested_floor
 
 
-
+"""
+LiftManager that implements the LOOK algorithm
+"""
 class LiftManagerLOOK(LiftManager):
 
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
+    """
+    Dequeues a request and updates the lift variables
 
-
+    Returns:
+        next_requested_floor (int): the next floor the lift will go to
+    """
     def process_next_request(self):
         next_request = self.lift_queue.dequeue(
             ignore_weight=self.ignore_weight,
@@ -134,14 +160,21 @@ class LiftManagerLOOK(LiftManager):
         return next_floor
 
 
-
+"""
+LiftManager that implements MyAlgorithm
+"""
 class LiftManagerMyAlgorithm(LiftManager):
     def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = MinHeap()
         self.total_time = 0
 
+    """
+    Dequeues a request and updates the lift variables
 
+    Returns:
+        next_requested_floor (int): the next floor the lift will go to
+    """
     def process_next_request(self):
         next_floor = self.lift_queue.dequeue(self.current_floor)  # Gets the next request from the queue
 
