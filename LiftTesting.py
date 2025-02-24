@@ -29,9 +29,13 @@ def file_testing(directory : str,
                  start_direction : str = "up"):
 
     # Read text file
-    with open(directory, "r") as file:
-        file_lines = file.readlines()
-        file.close()
+    try:
+        with open(directory, "r") as file:
+            file_lines = file.readlines()
+            file.close()
+    except FileNotFoundError:
+        print("Error: File not found.")
+        return
 
     # Get data from file headers
     num_floors, lift_capacity = file_lines[1].split(",")
@@ -944,7 +948,7 @@ def run_all_tests():
     print("All tests completed successfully!")
 
 if __name__ == '__main__':
-    if len(sys.argv) > 0:
+    if len(sys.argv) > 1:
         if sys.argv[1] == "file":
             # Run File Testing
             try:
@@ -956,3 +960,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == "random":
             # Run All tests
             run_all_tests()
+        else:
+            print("Error: Not a valid argument (Refer to README for usage)")
+    else:
+        print("Error: Not a valid argument (Refer to README for usage)")
