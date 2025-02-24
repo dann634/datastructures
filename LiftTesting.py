@@ -16,89 +16,92 @@ DEFAULT_FLOORS = 30
 
 """
 Runs the tests from the text files
-Used to test very specific scenarios
+
+Args:
+    directory (str): directory of the file
+    start_floor (int): the floor the lift starts on
+    start_direction (str): the direction the lift starts going
+    
 """
-def file_testing(filename : str,
-                 algorithm : Algorithm,
-                 start_floor : int,
-                 start_direction : str):
+def file_testing(directory : str,
+                 start_floor : int = 0,
+                 start_direction : str = "up"):
 
-    print("*" * 40)
-    print(f"TEST USING {algorithm} WITH FILE {filename}")
-    print("*" * 40)
-    print()
-
-    with open(f"input_files/{filename}", "r") as file:
+    # Read text file
+    with open(directory, "r") as file:
         file_lines = file.readlines()
         file.close()
 
-    num_floors, min_floor, lift_capacity = file_lines[1].split(",")
+    # Get data from file headers
+    num_floors, lift_capacity = file_lines[1].split(",")
     num_floors = int(num_floors.strip())
-    min_floor = int(min_floor.strip())
-    max_floor = min_floor + num_floors - 1
     lift_capacity = int(lift_capacity.strip())
+    lift_people : [int] = []
 
-    floor_requests = {}
-    for file_line in file_lines[3:]:
-        requests = []
+    # Extract requests from file contents
+    external_requests = []
+    internal_requests = []
+    for file_line in file_lines[4:]:
+
         floor, requests_on_floor = file_line.split(":")
         requests_on_floor = requests_on_floor.strip()
 
         if requests_on_floor != "":
             floor = int(floor.strip())
             for request in requests_on_floor.split(","):
-                requests.append(int(request))
-                floor_requests[floor] = requests
 
-    people_served = 0
-    lift_manager = LiftManager.get_instance(
-        algorithm=algorithm,
-        capacity=lift_capacity,
-        direction=start_direction,
-        current_floor=start_floor,
-        floors=num_floors,
-        ignore_weight=DEFAULT_IGNORE_WEIGHT,
-    )
+                try:
+                    random_index = random.randint(0, len(external_requests) - 1)
+                except ValueError:
+                    random_index = 0
+
+                try:
+                    external_requests.insert(random_index, floor)
+                except IndexError:
+                    external_requests.append(floor)
+
+                try:
+                    internal_requests.insert(random_index, int(request))
+                except IndexError:
+                    internal_requests.append(int(request))
+
+    # Run the input file against all 3 algorithms
+    results = []
+    for algorithm in [Algorithm.SCAN, Algorithm.LOOK, Algorithm.MYALGORITHM]:
+
+        # Copy the lists so they can be used for each algorithm
+        external_requests_copy = external_requests.copy()
+        internal_requests_copy = internal_requests.copy()
+
+        # Get the right lift manager class for the algorithm
+        lift_manager = LiftManager.get_instance(
+            algorithm=algorithm,
+            capacity=lift_capacity,
+            direction=start_direction,
+            current_floor=start_floor,
+            floors=num_floors,
+            ignore_weight=DEFAULT_IGNORE_WEIGHT,
+        )
+
+        # Run the algorithm
+        floors_traversed, _ = run_algorithm(
+            lift_manager=lift_manager,
+            people=external_requests_copy,
+            internal_requests=internal_requests_copy,
+            lift_people=lift_people,
+        )
+
+        results.append(floors_traversed)
+
+    # Create the bar graph
+    categories = ["SCAN", "LOOK", "MYALGORITHM"]
+    plt.bar(categories, results)
+    plt.xlabel("Algorithms")
+    plt.ylabel("Floors Traversed")
+    plt.title("File Input Algorithm Comparison")
+    plt.show()
 
 
-
-    while floor_requests:
-        people_served = people_served + 1
-        random.seed(None)
-        external_floor_request = random.choice(list(floor_requests.keys()))
-        lift_manager.lift_queue.enqueue(Call(external_floor_request, False))
-
-        internal_floor_request = floor_requests[external_floor_request][0]
-        lift_manager.lift_queue.enqueue(Call(internal_floor_request, True), lift_manager.current_floor)
-
-        floor_requests[external_floor_request].pop(0)
-
-        if len(floor_requests[external_floor_request]) < 1:
-            del floor_requests[external_floor_request]
-
-    floors_traversed = 0
-    total_floors_traversed = 0
-
-    for x in range(lift_manager.lift_queue.size()):
-        start_floor = lift_manager.current_floor
-        next_floor = lift_manager.process_next_request()
-        lift_manager.current_floor = next_floor
-
-        if algorithm == Algorithm.SCAN and lift_manager.reached_limit:
-            if lift_manager.current_direction == "up":
-                floors_traversed = (start_floor - min_floor) + (lift_manager.current_floor - min_floor)
-            elif lift_manager.current_direction == "down":
-                floors_traversed = (max_floor - start_floor) + (max_floor - lift_manager.current_floor)
-
-        else:
-            floors_traversed = abs(start_floor - lift_manager.current_floor)
-
-        total_floors_traversed = total_floors_traversed + floors_traversed
-        print(f"The lift has traveled from floor {start_floor} to floor {lift_manager.current_floor}. It has traversed {floors_traversed} floor(s).")
-
-    print()
-    print(f"The lift traveled a total of {total_floors_traversed} floor(s) when serving {people_served} people.")
-    return floor_requests, people_served
 
 
 """
@@ -184,7 +187,7 @@ Returns:
     people_in_lift_track (int): A tracking metric for how many people are in the lift
     floors_travelled_empty (int): A tracking metric for how often the lift is empty
 """
-def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int], track_people : bool = False):
+def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int], track_people : bool = False, internal_requests : [int] = []):
 
     # Tracking metrics
     total_floors_travelled = 0
@@ -259,6 +262,7 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
             max_can_move = lift_manager.capacity - len(lift_people)
             # Remove people from floor_list
             counter = 0
+            internal_counter = 0
             for request in people:
                 if counter == max_can_move:
                     break
@@ -266,7 +270,74 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                     people.remove(request)
                     counter += 1
 
-                    # Create target floor
+
+                    # Check preloaded request list
+                    if len(internal_requests) > 0:
+                        target_floor = internal_requests[internal_counter]
+                        del internal_requests[internal_counter]
+                        internal_counter -= 1
+
+                        if target_floor == lift_manager.current_floor:
+                            target_floor = random.randint(0, lift_manager.floors - 1)
+                            while target_floor == lift_manager.current_floor:
+                                target_floor = random.randint(0, lift_manager.floors - 1)
+
+                    else:
+
+                        # Create target floor
+                        target_floor = random.randint(0, lift_manager.floors - 1)
+                        while target_floor == lift_manager.current_floor:
+                            target_floor = random.randint(0, lift_manager.floors - 1)
+
+                    lift_manager.lift_queue.enqueue(Call(target_floor, True), lift_manager.current_floor)
+                    lift_people.append(target_floor)
+                    lift_manager.add_person()
+
+
+                    # Add target floor to tracking dictionary
+                    request_log[lift_manager.current_floor].append(target_floor)
+
+                internal_counter += 1
+
+
+
+        else:
+            # Can take everyone
+            # Removes the people from the list
+
+            if len(internal_requests) > 0:
+                external_people = []
+                internal_people = []
+                counter : int = 0
+                people_counter : int = 0
+                for request in people:
+                    if request == lift_manager.current_floor:
+                        external_people.append(lift_manager.current_floor)
+                        internal_people.append(internal_requests[counter])
+                        del internal_requests[counter]
+                        counter -= 1
+                        del people[people_counter]
+
+                    people_counter += 1
+                    counter += 1
+
+                length : int = len(internal_people)
+                for _ in range(length):
+                    # Add new people to lift and add calls
+                    target_floor = internal_people.pop(0)
+                    lift_manager.lift_queue.enqueue(Call(target_floor, True), lift_manager.current_floor)
+                    lift_people.append(target_floor)
+                    lift_manager.add_person()
+
+                    # Add target floor to tracking dictionary
+                    request_log[lift_manager.current_floor].append(target_floor)
+
+
+            else:
+
+                people = [request for request in people if request != lift_manager.current_floor]
+                for _ in range(people_on_floor):
+                    # Make a random internal request
                     target_floor = random.randint(0, lift_manager.floors - 1)
                     while target_floor == lift_manager.current_floor:
                         target_floor = random.randint(0, lift_manager.floors - 1)
@@ -278,24 +349,6 @@ def run_algorithm(lift_manager : LiftManager, people : [int], lift_people : [int
                     # Add target floor to tracking dictionary
                     request_log[lift_manager.current_floor].append(target_floor)
 
-
-
-        else:
-            # Can take everyone
-            # Removes the people from the list
-            people = [request for request in people if request != lift_manager.current_floor]
-            for _ in range(people_on_floor):
-                # Make a random internal request
-                target_floor = random.randint(0, lift_manager.floors - 1)
-                while target_floor == lift_manager.current_floor:
-                    target_floor = random.randint(0, lift_manager.floors - 1)
-
-                lift_manager.lift_queue.enqueue(Call(target_floor, True), lift_manager.current_floor)
-                lift_people.append(target_floor)
-                lift_manager.add_person()
-
-                # Add target floor to tracking dictionary
-                request_log[lift_manager.current_floor].append(target_floor)
 
 
     if track_people:
@@ -382,62 +435,67 @@ Weight Sensor: (ON/OFF)
 """
 def algorithm_weight_sensor_test():
 
-    #Lists to store results of each algorithm output
-    floors_traversed_scan : [int] = []
-    floors_traversed_look : [int] = []
-    floors_traversed_scan_weight : [int] = []
-    floors_traversed_look_weight : [int] = []
+
 
     # Create list from the default values
-    people_served = range(DEFAULT_MIN_PEOPLE, DEFAULT_MAX_PEOPLE, DEFAULT_PEOPLE_STEP)
+    people_served = range(DEFAULT_MIN_PEOPLE, 500, 2)
 
-    # Loops through, using each algorithm, running with the weight sensor on and off, changing the number of people each time
-    for ignore_weight in [True, False]:
-        for algorithm in [Algorithm.LOOK, Algorithm.SCAN]:
-            for people in people_served:
+    for weight in [1, 3, 12]:
 
-                # Should save file
-                is_last = algorithm == Algorithm.LOOK and people == people_served[-1]
+        # Lists to store results of each algorithm output
+        floors_traversed_scan: [int] = []
+        floors_traversed_look: [int] = []
+        floors_traversed_scan_weight: [int] = []
+        floors_traversed_look_weight: [int] = []
 
-                # Get floors traversed from output
-                floors_traversed = random_testing(
-                    algorithm=algorithm,
-                    number_of_people=people,
-                    ignore_weight=ignore_weight,
-                    test_num=2,
-                    is_last_test=is_last
-                )
+        # Loops through, using each algorithm, running with the weight sensor on and off, changing the number of people each time
+        for ignore_weight in [True, False]:
+            for algorithm in [Algorithm.LOOK, Algorithm.SCAN]:
+                for people in people_served:
 
+                    # Should save file
+                    is_last = algorithm == Algorithm.LOOK and people == people_served[-1]
 
-                # Add output to matching list
-                if not ignore_weight:
-                    if algorithm == Algorithm.SCAN:
-                        floors_traversed_scan_weight.append(floors_traversed)
-                    elif algorithm == Algorithm.LOOK:
-                        floors_traversed_look_weight.append(floors_traversed)
+                    # Get floors traversed from output
+                    floors_traversed = random_testing(
+                        algorithm=algorithm,
+                        number_of_people=people,
+                        lift_capacity=weight,
+                        ignore_weight=ignore_weight,
+                        test_num=2,
+                        is_last_test=is_last,
+                    )
 
-                else:
-                    if algorithm == Algorithm.SCAN:
-                        floors_traversed_scan.append(floors_traversed)
-                    elif algorithm == Algorithm.LOOK:
-                        floors_traversed_look.append(floors_traversed)
+                    # Add output to matching list
+                    if not ignore_weight:
+                        if algorithm == Algorithm.SCAN:
+                            floors_traversed_scan_weight.append(floors_traversed)
+                        elif algorithm == Algorithm.LOOK:
+                            floors_traversed_look_weight.append(floors_traversed)
 
+                    else:
+                        if algorithm == Algorithm.SCAN:
+                            floors_traversed_scan.append(floors_traversed)
+                        elif algorithm == Algorithm.LOOK:
+                            floors_traversed_look.append(floors_traversed)
 
-    #Generate graph
-    plt.figure(figsize=(8, 6))
-    plt.scatter(people_served, floors_traversed_scan, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
-    plt.scatter(people_served, floors_traversed_scan_weight, color='darkblue', label="SCAN - Sensor", alpha=0.7, marker='o')
-    plt.scatter(people_served, floors_traversed_look, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
-    plt.scatter(people_served, floors_traversed_look_weight, color='firebrick', label="LOOK - Sensor", alpha=0.7, marker='s')
+        # Generate graph
+        plt.figure(figsize=(8, 6))
+        plt.scatter(people_served, floors_traversed_scan, color='blue', label="SCAN - No Sensor", alpha=0.7, marker='o')
+        plt.scatter(people_served, floors_traversed_scan_weight, color='darkblue', label="SCAN - Sensor", alpha=0.7,
+                    marker='o')
+        plt.scatter(people_served, floors_traversed_look, color='red', label="LOOK - No Sensor", alpha=0.7, marker='s')
+        plt.scatter(people_served, floors_traversed_look_weight, color='firebrick', label="LOOK - Sensor", alpha=0.7,
+                    marker='s')
 
-    #Add details to the graph
-    plt.xlabel("People Served")
-    plt.ylabel("Floors Traversed")
-    plt.title("Weight Sensor Performance (SCAN, LOOK, MyAlgorithm)")
-    plt.legend()
-    plt.grid(True)
-    plt.savefig("tests/test2/graph.png")
-    plt.show()
+        # Add details to the graph
+        plt.xlabel("People Served")
+        plt.ylabel("Floors Traversed")
+        plt.title(f"Weight Sensor Performance - {weight} (SCAN, LOOK, MyAlgorithm)")
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(f"tests/test2/graph{weight}.png")
+        plt.show()
 
     print("Test 2: Ran Successfully")
 
@@ -859,6 +917,7 @@ def save_random_input(
         request_line = f"{floor}: "
         for request in internal_requests:
             request_line += f"{request}, "
+        request_line = request_line[:-2]
         file_contents.append(request_line)
 
     #Save to file
@@ -882,5 +941,7 @@ def run_all_tests():
     floor_test()
 
 if __name__ == '__main__':
-    run_all_tests()
+    # run_all_tests()
+    algorithm_weight_sensor_test()
+    # file_testing("tests/test1/example_input.txt")
     # scan_vs_look_myalgorithm()

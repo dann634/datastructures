@@ -1,5 +1,5 @@
-# Number of Floors, Lowest Floor, Capacity
-5, 0, 4
+# Number of Floors, Capacity
+5, 4
 # Floor Requests
 0: 3, 2
 1: 2

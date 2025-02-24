@@ -9,7 +9,7 @@ Parent Class of all Algorithm Implementations
 Inheritance reduces variables being created individually 
 """
 class LiftManager:
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, capacity : int, direction : str, current_floor : int, floors : int, ignore_weight : bool):
         self.capacity = capacity
         self.passenger_count = 0
         self.current_direction = direction
@@ -77,7 +77,7 @@ Has reached_limit to track whether the lift has reached the end of the lift shaf
 """
 class LiftManagerSCAN(LiftManager):
 
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, capacity : int, direction : str, current_floor : int, floors : int, ignore_weight : bool):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
@@ -122,7 +122,7 @@ LiftManager that implements the LOOK algorithm
 """
 class LiftManagerLOOK(LiftManager):
 
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, capacity : int, direction : str, current_floor : int, floors : int, ignore_weight : bool):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = LiftQueue()
 
@@ -164,7 +164,7 @@ class LiftManagerLOOK(LiftManager):
 LiftManager that implements MyAlgorithm
 """
 class LiftManagerMyAlgorithm(LiftManager):
-    def __init__(self, capacity, direction, current_floor, floors, ignore_weight):
+    def __init__(self, capacity : int, direction : str, current_floor : int, floors : int, ignore_weight : bool):
         super().__init__(capacity, direction, current_floor, floors, ignore_weight)
         self.lift_queue = MinHeap()
         self.total_time = 0

@@ -14,7 +14,7 @@ class LiftQueue:
         call (Call): the request to add
         _ (int): value not used here but in MinHeap.enqueue()
     """
-    def enqueue(self, call: Call, _=0):
+    def enqueue(self, call: Call, _ : int = 0):
         self.__calls.append(call)
 
     """
@@ -71,5 +71,5 @@ class LiftQueue:
     """
     Returns the length of the internal list
     """
-    def size(self):
+    def size(self) -> int:
         return len(self.__calls)
