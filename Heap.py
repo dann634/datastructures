@@ -97,11 +97,11 @@ class MinHeap:
     def __remove_min(self):
         if not self.__heap:
             return None
-        minItem = self.__heap[0]
+        min_item = self.__heap[0]
         self.__heap[0] = self.__heap[len(self.__heap) - 1]
         self.__heap.pop()
         self.__heapify_down(0)
-        return minItem
+        return min_item
 
 
     """

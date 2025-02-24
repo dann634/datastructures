@@ -1,4 +1,5 @@
 import random
+import sys
 
 from matplotlib import pyplot as plt
 
@@ -933,15 +934,25 @@ Executes all tests sequentially
 Saves an example input file and graph to tests/
 """
 def run_all_tests():
+    print("Running all tests...")
     scan_vs_look_myalgorithm()
     algorithm_weight_sensor_test()
     capacity_test()
     popular_floor_test()
     lift_occupancy_test()
     floor_test()
+    print("All tests completed successfully!")
 
 if __name__ == '__main__':
-    # run_all_tests()
-    algorithm_weight_sensor_test()
-    # file_testing("tests/test1/example_input.txt")
-    # scan_vs_look_myalgorithm()
+    if len(sys.argv) > 0:
+        if sys.argv[1] == "file":
+            # Run File Testing
+            try:
+                file_directory = sys.argv[2]
+                file_testing(file_directory)
+            except IndexError:
+                print("Error: No file specified")
+
+        elif sys.argv[1] == "random":
+            # Run All tests
+            run_all_tests()
