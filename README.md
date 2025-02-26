@@ -4,6 +4,10 @@
 Has options for Testing through text files or through random testing
 
 ## Installation
+
+**Create a tests folder directory with test1-test6 folders within that. e.g:**  
+_tests/test2_
+
 **Dependencies**  
 - Matplotlib
 
